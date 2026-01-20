@@ -2,8 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { JobApplication, ApplicationStatus } from '../types';
 import { mockApplications } from '../utils/mockData';
 import {
-  Calendar,
-  MapPin,
   Filter,
   Download
 } from 'lucide-react';

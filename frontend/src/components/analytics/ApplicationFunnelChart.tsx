@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { TrendingUp, AlertTriangle, XCircle } from 'lucide-react';
-import { JobApplication, ApplicationStatus } from '../../types';
+import { TrendingUp, AlertTriangle } from 'lucide-react';
+import { JobApplication } from '../../types';
 
 interface ApplicationFunnelChartProps {
   applications: JobApplication[];

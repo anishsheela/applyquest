@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { Flame, Target, TrendingUp, Briefcase, Users, CheckCircle, Mail, Star } from 'lucide-react';
+import { Flame, Target, TrendingUp, Briefcase, Users, CheckCircle, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import AddApplicationForm from '../forms/AddApplicationForm';
 
 const ApplyQuestDashboard = () => {
   // Mock user data - will come from backend later
-  const [userData, setUserData] = useState({
+  const [userData] = useState({
     name: "User",
     points: 247,
     level: 2,
@@ -22,7 +21,7 @@ const ApplyQuestDashboard = () => {
     { id: 3, type: "Add networking contacts", target: 2, current: 2, icon: Users }
   ]);
 
-  const [quickStats, setQuickStats] = useState({
+  const [quickStats] = useState({
     totalApplications: 45,
     responseRate: 28,
     interviewRate: 15,
