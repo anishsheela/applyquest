@@ -206,7 +206,14 @@ const ApplyQuestDashboard = () => {
 
         {/* Action Buttons */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <AddApplicationForm />
+          <button
+            onClick={() => navigate('/applications')}
+            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 text-left"
+          >
+            <Briefcase className="w-8 h-8 mb-2" />
+            <h3 className="text-xl font-bold mb-1">Add Application</h3>
+            <p className="text-blue-100 text-sm">Track a new job application</p>
+          </button>
 
           <button
             onClick={() => navigate('/applications')}
