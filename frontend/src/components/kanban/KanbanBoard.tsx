@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Briefcase, MapPin, Star, Calendar, ExternalLink, Edit, Trash2, ChevronRight } from 'lucide-react';
+import { MapPin, Star, Calendar, ExternalLink, Edit, Trash2 } from 'lucide-react';
 import { JobApplication, ApplicationStatus } from '../../types';
 
 interface KanbanBoardProps {

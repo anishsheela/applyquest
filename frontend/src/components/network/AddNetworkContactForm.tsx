@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, Mail, Building, Users, Calendar, Star, Link2, Plus } from 'lucide-react';
+import { X, User, Mail, Building, Users, Calendar, Star, Link2 } from 'lucide-react';
 import { NetworkContact, JobApplication } from '../../types';
 
 interface NetworkContactFormData {

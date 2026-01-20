@@ -2,11 +2,9 @@ import React, { useState, useMemo } from 'react';
 import { JobApplication, ApplicationStatus, GermanLevel } from '../../types';
 import {
   Search,
-  Filter,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Eye,
   Edit,
   Trash2,
   ExternalLink,

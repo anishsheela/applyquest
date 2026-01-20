@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, JobApplication, NetworkContact, DailyGoal } from '../types';
+import { User, JobApplication, NetworkContact } from '../types';
 import { mockUser, mockApplications, mockContacts } from '../utils/mockData';
 import {
   User as UserIcon,
@@ -8,7 +8,6 @@ import {
   Languages,
   Briefcase,
   Trophy,
-  Target,
   Flame,
   Calendar,
   Download,
@@ -16,7 +15,6 @@ import {
   Edit2,
   Save,
   X,
-  Star,
   Award,
   TrendingUp
 } from 'lucide-react';

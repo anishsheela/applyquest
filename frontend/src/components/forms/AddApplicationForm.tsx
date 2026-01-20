@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Briefcase, MapPin, DollarSign, Code, Star, Link2, Calendar, Globe, Building } from 'lucide-react';
+import { X, Briefcase, MapPin, DollarSign, Code, Star, Link2, Globe, Building } from 'lucide-react';
 
 interface ApplicationFormData {
   companyName: string;
@@ -27,7 +27,7 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
   onClose,
   initialData
 }) => {
-  const [isOpen, setIsOpen] = useState(true);
+  const isOpen = true;
   const [formData, setFormData] = useState<ApplicationFormData>({
     companyName: initialData?.companyName || '',
     positionTitle: initialData?.positionTitle || '',
