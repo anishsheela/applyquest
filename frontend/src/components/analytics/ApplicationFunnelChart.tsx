@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { TrendingUp } from 'lucide-react';
-import { JobApplication } from '../../types';
+import { TrendingUp, AlertTriangle, XCircle } from 'lucide-react';
+import { JobApplication, ApplicationStatus } from '../../types';
 
 interface ApplicationFunnelChartProps {
   applications: JobApplication[];
@@ -8,47 +8,86 @@ interface ApplicationFunnelChartProps {
 
 const ApplicationFunnelChart: React.FC<ApplicationFunnelChartProps> = ({ applications }) => {
   const funnelData = useMemo(() => {
-    const stages = [
-      { name: 'Applied', status: 'Applied', color: '#3B82F6' },
-      { name: 'Replied', statuses: ['Replied'], color: '#8B5CF6' },
-      { name: 'Phone Screen', status: 'Phone Screen', color: '#F59E0B' },
-      { name: 'Technical 1', status: 'Technical Round 1', color: '#F97316' },
-      { name: 'Technical 2', status: 'Technical Round 2', color: '#EF4444' },
-      { name: 'Final Round', status: 'Final Round', color: '#8B5CF6' },
-      { name: 'Offer', status: 'Offer', color: '#10B981' }
-    ];
+    // Calculate comprehensive funnel data including drop-offs
+    const totalApplied = applications.length;
 
-    const stageCounts = stages.map((stage, index) => {
-      let count = 0;
-      if (stage.status) {
-        count = applications.filter(app => app.status === stage.status).length;
-      } else if (stage.statuses) {
-        count = applications.filter(app => stage.statuses!.includes(app.status)).length;
+    // Applications that received any response
+    const responded = applications.filter(app =>
+      !['Applied', 'Ghosted'].includes(app.status)
+    ).length;
+
+    // Applications that reached interview stages
+    const interviewed = applications.filter(app =>
+      ['Phone Screen', 'Technical Round 1', 'Technical Round 2', 'Final Round'].includes(app.status)
+    ).length;
+
+    // Applications that reached final rounds
+    const finalRound = applications.filter(app =>
+      app.status === 'Final Round'
+    ).length;
+
+    // Applications that received offers
+    const offers = applications.filter(app =>
+      app.status === 'Offer'
+    ).length;
+
+    // Calculate drop-offs at each stage
+    const ghosted = applications.filter(app => app.status === 'Ghosted').length;
+    const rejected = applications.filter(app => app.status === 'Rejected').length;
+
+    // Calculate rates
+    const responseRate = totalApplied > 0 ? Math.round((responded / totalApplied) * 100) : 0;
+    const interviewRate = responded > 0 ? Math.round((interviewed / responded) * 100) : 0;
+    const finalRoundRate = interviewed > 0 ? Math.round((finalRound / interviewed) * 100) : 0;
+    const offerRate = finalRound > 0 ? Math.round((offers / finalRound) * 100) : 0;
+
+    return {
+      stages: [
+        {
+          name: 'Applied',
+          count: totalApplied,
+          conversionRate: 100,
+          color: '#3B82F6',
+          description: 'Total applications submitted'
+        },
+        {
+          name: 'Response',
+          count: responded,
+          conversionRate: responseRate,
+          color: '#8B5CF6',
+          description: `${responseRate}% response rate`
+        },
+        {
+          name: 'Interview',
+          count: interviewed,
+          conversionRate: interviewRate,
+          color: '#F59E0B',
+          description: `${interviewRate}% interview rate`
+        },
+        {
+          name: 'Final Round',
+          count: finalRound,
+          conversionRate: finalRoundRate,
+          color: '#F97316',
+          description: `${finalRoundRate}% final round rate`
+        },
+        {
+          name: 'Offer',
+          count: offers,
+          conversionRate: offerRate,
+          color: '#10B981',
+          description: `${offerRate}% offer rate`
+        }
+      ],
+      dropOffs: {
+        ghosted,
+        rejected,
+        totalDropOffs: ghosted + rejected
       }
-
-      const previousCount = index > 0 ? stages.slice(0, index).reduce((sum, s) => {
-        if (s.status) return sum + applications.filter(app => app.status === s.status).length;
-        if (s.statuses) return sum + applications.filter(app => s.statuses!.includes(app.status)).length;
-        return sum;
-      }, 0) : applications.length;
-
-      const conversionRate = previousCount > 0 ? Math.round((count / previousCount) * 100) : 0;
-
-      return {
-        stage: stage.name,
-        count,
-        conversionRate,
-        width: Math.max(20, (count / Math.max(...stages.map(s => {
-          if (s.status) return applications.filter(app => app.status === s.status).length;
-          if (s.statuses) return applications.filter(app => s.statuses!.includes(app.status)).length;
-          return 0;
-        }))) * 100),
-        color: stage.color
-      };
-    });
-
-    return stageCounts;
+    };
   }, [applications]);
+
+  const maxCount = Math.max(...funnelData.stages.map(s => s.count));
 
   return (
     <div className="bg-white rounded-xl p-6 shadow-md">
@@ -59,49 +98,74 @@ const ApplicationFunnelChart: React.FC<ApplicationFunnelChartProps> = ({ applica
         <h2 className="text-xl font-bold text-gray-800">Application Funnel</h2>
       </div>
 
-      <div className="h-80">
-        <div className="h-full flex flex-col justify-center">
-          <div className="space-y-2">
-            {funnelData.map((item, index) => (
-              <div key={item.stage} className="relative">
-                {/* Funnel step */}
-                <div className="flex items-center gap-4">
-                  <div className="w-24 text-sm font-medium text-gray-600 text-right">
-                    {item.stage}
-                  </div>
-                  <div className="flex-1 relative">
-                    <div
-                      className="h-8 rounded transition-all duration-300 flex items-center justify-center text-white font-bold text-sm shadow-md"
-                      style={{
-                        width: `${item.width}%`,
-                        backgroundColor: item.color,
-                        marginLeft: `${(100 - item.width) / 2}%`
-                      }}
-                    >
-                      {item.count}
-                    </div>
-                  </div>
-                  <div className="w-16 text-sm text-gray-600 text-center">
-                    {item.conversionRate}%
+      {/* Main Funnel */}
+      <div className="mb-6">
+        <div className="space-y-3">
+          {funnelData.stages.map((stage, index) => (
+            <div key={stage.name} className="relative">
+              <div className="flex items-center gap-4">
+                <div className="w-28 text-sm font-medium text-gray-700 text-right flex-shrink-0">
+                  {stage.name}
+                </div>
+                <div className="flex-1 relative min-h-[40px] flex items-center">
+                  <div
+                    className="h-10 rounded-lg transition-all duration-300 flex items-center justify-between px-3 text-white font-bold text-sm shadow-md"
+                    style={{
+                      width: `${maxCount > 0 ? (stage.count / maxCount) * 100 : 0}%`,
+                      backgroundColor: stage.color,
+                      minWidth: '60px'
+                    }}
+                  >
+                    <span>{stage.count}</span>
+                    <span className="text-xs opacity-90">{stage.conversionRate}%</span>
                   </div>
                 </div>
-
-                {/* Conversion arrow */}
-                {index < funnelData.length - 1 && (
-                  <div className="flex justify-center mt-1 mb-1">
-                    <div className="text-xs text-gray-400">↓</div>
-                  </div>
-                )}
               </div>
-            ))}
-          </div>
+              <div className="ml-32 mt-1">
+                <p className="text-xs text-gray-500">{stage.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Shows conversion rates between each stage of your job application process
-            </p>
+      {/* Drop-off Summary */}
+      <div className="bg-gray-50 rounded-lg p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <AlertTriangle className="w-4 h-4 text-amber-600" />
+          <h3 className="text-sm font-semibold text-gray-800">Application Outcomes</h3>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-3 h-3 rounded-full bg-gray-500"></div>
+            <div>
+              <div className="text-sm font-medium text-gray-800">{funnelData.dropOffs.ghosted}</div>
+              <div className="text-xs text-gray-600">Ghosted</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-3 h-3 rounded-full bg-red-500"></div>
+            <div>
+              <div className="text-sm font-medium text-gray-800">{funnelData.dropOffs.rejected}</div>
+              <div className="text-xs text-gray-600">Rejected</div>
+            </div>
           </div>
         </div>
+
+        <div className="mt-3 pt-3 border-t border-gray-200">
+          <div className="flex justify-between items-center text-xs text-gray-600">
+            <span>Total drop-offs:</span>
+            <span className="font-medium">{funnelData.dropOffs.totalDropOffs} applications</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 text-center">
+        <p className="text-xs text-gray-500">
+          Conversion rates show progression through the application process.
+          Ghosted and rejected applications represent outcomes at any stage.
+        </p>
       </div>
     </div>
   );
