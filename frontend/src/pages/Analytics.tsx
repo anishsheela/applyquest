@@ -83,48 +83,88 @@ const Analytics: React.FC = () => {
   }, [filteredApplications]);
 
 
-  // Applications over time data
+  // Applications over time data - show last 6 months for better data visibility
   const timelineData = useMemo(() => {
-    const last30Days = Array.from({ length: 30 }, (_, i) => {
+    const last6Months = Array.from({ length: 6 }, (_, i) => {
       const date = new Date();
-      date.setDate(date.getDate() - (29 - i));
-      return date.toISOString().split('T')[0];
+      date.setMonth(date.getMonth() - (5 - i));
+      return {
+        year: date.getFullYear(),
+        month: date.getMonth(),
+        label: date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' }),
+        startDate: new Date(date.getFullYear(), date.getMonth(), 1).toISOString().split('T')[0],
+        endDate: new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString().split('T')[0]
+      };
     });
 
-    return last30Days.map(date => {
-      const dayApps = filteredApplications.filter(app =>
-        app.createdAt.startsWith(date)
-      );
+    return last6Months.map(month => {
+      const monthApps = filteredApplications.filter(app => {
+        const appDate = app.createdAt.split('T')[0];
+        return appDate >= month.startDate && appDate <= month.endDate;
+      });
       return {
-        date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        applications: dayApps.length,
-        responded: dayApps.filter(app => !['Applied', 'Ghosted'].includes(app.status)).length
+        date: month.label,
+        applications: monthApps.length,
+        responded: monthApps.filter(app => !['Applied', 'Ghosted'].includes(app.status)).length
       };
     });
   }, [filteredApplications]);
 
-  // Company analysis
-  const companyData = useMemo(() => {
-    const companyStats = filteredApplications.reduce((acc, app) => {
-      if (!acc[app.companyName]) {
-        acc[app.companyName] = { total: 0, offers: 0 };
-      }
-      acc[app.companyName].total++;
-      if (app.status === 'Offer') {
-        acc[app.companyName].offers++;
-      }
-      return acc;
-    }, {} as Record<string, { total: number; offers: number }>);
+  // Industry analysis - more meaningful than individual companies
+  const industryData = useMemo(() => {
+    // Categorize companies by industry
+    const industryMap: Record<string, { companies: Set<string>, total: number, responded: number, offers: number }> = {};
 
-    return Object.entries(companyStats)
-      .map(([company, stats]) => ({
-        company: company.length > 15 ? company.substring(0, 15) + '...' : company,
-        applications: stats.total,
-        offers: stats.offers,
-        successRate: stats.total > 0 ? Math.round((stats.offers / stats.total) * 100) : 0
+    filteredApplications.forEach(app => {
+      let industry = 'Other';
+
+      // Simple industry categorization based on company names
+      const company = app.companyName.toLowerCase();
+      if (company.includes('sap') || company.includes('siemens') || company.includes('bosch') || company.includes('continental') || company.includes('infineon')) {
+        industry = 'Industrial/Tech';
+      } else if (company.includes('bank') || company.includes('finance') || company.includes('kpmg') || company.includes('deloitte') || company.includes('n26') || company.includes('traderepublic')) {
+        industry = 'Finance/Fintech';
+      } else if (company.includes('telekom') || company.includes('telecom') || company.includes('deutsche telekom') || company.includes('t-systems')) {
+        industry = 'Telecommunications';
+      } else if (company.includes('bmw') || company.includes('vw') || company.includes('volkswagen') || company.includes('porsche') || company.includes('audi') || company.includes('zf') || company.includes('man')) {
+        industry = 'Automotive';
+      } else if (company.includes('zalando') || company.includes('henkel') || company.includes('basf') || company.includes('merck') || company.includes('edeka')) {
+        industry = 'Consumer/Chemical';
+      } else if (company.includes('startup') || company.includes('gorillas') || company.includes('tier') || company.includes('hellofresh') || company.includes('researchgate')) {
+        industry = 'E-commerce/Startup';
+      } else if (company.includes('healthcare') || company.includes('roche') || company.includes('fresenius') || company.includes('fraport')) {
+        industry = 'Healthcare/Logistics';
+      } else if (company.includes('lufthansa') || company.includes('dhl') || company.includes('flixbus')) {
+        industry = 'Transportation';
+      } else if (company.includes('consulting') || company.includes('accenture') || company.includes('capgemini')) {
+        industry = 'Consulting';
+      }
+
+      if (!industryMap[industry]) {
+        industryMap[industry] = { companies: new Set(), total: 0, responded: 0, offers: 0 };
+      }
+
+      industryMap[industry].companies.add(app.companyName);
+      industryMap[industry].total++;
+      if (!['Applied', 'Ghosted'].includes(app.status)) {
+        industryMap[industry].responded++;
+      }
+      if (app.status === 'Offer') {
+        industryMap[industry].offers++;
+      }
+    });
+
+    return Object.entries(industryMap)
+      .map(([industry, data]) => ({
+        industry,
+        companies: data.companies.size,
+        applications: data.total,
+        responded: data.responded,
+        offers: data.offers,
+        responseRate: data.total > 0 ? Math.round((data.responded / data.total) * 100) : 0,
+        offerRate: data.total > 0 ? Math.round((data.offers / data.total) * 100) : 0
       }))
-      .sort((a, b) => b.applications - a.applications)
-      .slice(0, 10);
+      .sort((a, b) => b.applications - a.applications);
   }, [filteredApplications]);
 
   return (
@@ -170,8 +210,13 @@ const Analytics: React.FC = () => {
         {/* Applications Timeline */}
         <ApplicationsTimelineChart timelineData={timelineData} />
 
-        {/* Top Companies */}
-        <TopCompaniesAnalysis companyData={companyData} />
+        {/* Industry Analysis */}
+        <TopCompaniesAnalysis companyData={industryData.map(ind => ({
+          company: ind.industry,
+          applications: ind.applications,
+          offers: ind.offers,
+          successRate: ind.responseRate
+        }))} />
 
         {/* Application Funnel */}
         <ApplicationFunnelChart applications={filteredApplications} />
