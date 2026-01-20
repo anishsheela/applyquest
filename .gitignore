@@ -6,3 +6,6 @@ frontend/.env
 # Docker
 .DS_Store
 *.log
+
+# Other
+.idea
