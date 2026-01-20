@@ -13,6 +13,7 @@ import ApplicationsTimelineChart from '../components/analytics/ApplicationsTimel
 import TopCompaniesAnalysis from '../components/analytics/TopCompaniesAnalysis';
 import ApplicationFunnelChart from '../components/analytics/ApplicationFunnelChart';
 import TechStackAnalysis from '../components/analytics/TechStackAnalysis';
+import GermanyMap from '../components/analytics/GermanyMap';
 
 
 const Analytics: React.FC = () => {
@@ -181,28 +182,8 @@ const Analytics: React.FC = () => {
         {/* Tech Stack Analysis */}
         <TechStackAnalysis applications={filteredApplications} />
 
-        {/* Germany Map Placeholder */}
-        <div className="bg-white rounded-xl p-6 shadow-md">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full p-3">
-              <MapPin className="w-6 h-6 text-white" />
-            </div>
-            <h2 className="text-xl font-bold text-gray-800">Germany Map Visualization</h2>
-          </div>
-
-          <div className="h-80 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MapPin className="w-8 h-8 text-indigo-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Interactive Germany Map</h3>
-              <p className="text-gray-600 text-sm max-w-sm">
-                Coming soon! Interactive map showing your applications across German cities and states,
-                with color-coded pins for different application statuses.
-              </p>
-            </div>
-          </div>
-        </div>
+        {/* Germany Map */}
+        <GermanyMap applications={filteredApplications} />
       </div>
     </div>
   );
