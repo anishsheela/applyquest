@@ -43,7 +43,7 @@ export type ApplicationStatus =
   | 'Final Round'
   | 'Offer'
   | 'Rejected'
-  | 'Withdrawn';
+  | 'Ghosted';
 
 export type GermanLevel = 'None' | 'Basic' | 'Fluent';
 

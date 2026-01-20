@@ -16,21 +16,31 @@ interface ApplicationFormData {
   notes: string;
 }
 
-const AddApplicationForm: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
+interface AddApplicationFormProps {
+  onSubmit: (data: ApplicationFormData) => void;
+  onClose: () => void;
+  initialData?: Partial<ApplicationFormData>;
+}
+
+const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
+  onSubmit,
+  onClose,
+  initialData
+}) => {
+  const [isOpen, setIsOpen] = useState(true);
   const [formData, setFormData] = useState<ApplicationFormData>({
-    companyName: '',
-    positionTitle: '',
-    location: '',
-    jobUrl: '',
-    salaryRange: '',
-    techStack: '',
-    visaSponsorship: false,
-    germanRequirement: 'None',
-    relocationSupport: false,
-    jobBoardSource: '',
-    priorityStars: 3,
-    notes: ''
+    companyName: initialData?.companyName || '',
+    positionTitle: initialData?.positionTitle || '',
+    location: initialData?.location || '',
+    jobUrl: initialData?.jobUrl || '',
+    salaryRange: initialData?.salaryRange || '',
+    techStack: initialData?.techStack || '',
+    visaSponsorship: initialData?.visaSponsorship || false,
+    germanRequirement: initialData?.germanRequirement || 'None',
+    relocationSupport: initialData?.relocationSupport || false,
+    jobBoardSource: initialData?.jobBoardSource || '',
+    priorityStars: initialData?.priorityStars || 3,
+    notes: initialData?.notes || ''
   });
 
   const germanLevels = ['None', 'Basic', 'Fluent'];
@@ -53,39 +63,11 @@ const AddApplicationForm: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Application submitted:', formData);
-
-    alert(`Application added successfully! 🎉\n\nCompany: ${formData.companyName}\nPosition: ${formData.positionTitle}\nYou earned +2 points!`);
-
-    setFormData({
-      companyName: '',
-      positionTitle: '',
-      location: '',
-      jobUrl: '',
-      salaryRange: '',
-      techStack: '',
-      visaSponsorship: false,
-      germanRequirement: 'None',
-      relocationSupport: false,
-      jobBoardSource: '',
-      priorityStars: 3,
-      notes: ''
-    });
-
-    setIsOpen(false);
+    onSubmit(formData);
   };
 
   return (
     <div>
-      <button
-        onClick={() => setIsOpen(true)}
-        className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 text-left"
-      >
-        <Briefcase className="w-8 h-8 mb-2" />
-        <h3 className="text-xl font-bold mb-1">Add Application</h3>
-        <p className="text-blue-100 text-sm">Track a new job application</p>
-      </button>
-
       {isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -95,7 +77,7 @@ const AddApplicationForm: React.FC = () => {
                 <h2 className="text-2xl font-bold">Add New Application</h2>
               </div>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={onClose}
                 className="hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-colors"
               >
                 <X className="w-6 h-6" />
@@ -331,7 +313,7 @@ const AddApplicationForm: React.FC = () => {
               <div className="flex gap-3 pt-4 border-t">
                 <button
                   type="button"
-                  onClick={() => setIsOpen(false)}
+                  onClick={onClose}
                   className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                 >
                   Cancel
