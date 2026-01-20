@@ -1,0 +1,102 @@
+import { User, JobApplication, NetworkContact, DailyGoal } from '../types';
+
+export const mockUser: User = {
+  id: '1',
+  name: 'John Doe',
+  email: 'john@example.com',
+  currentEducation: 'M.Tech Final Semester, BITS Pilani WILP',
+  germanLevel: 'B1',
+  currentRole: 'Independent Contractor (Part-time)',
+  points: 247,
+  level: 2,
+  levelName: 'Active Applicant',
+  currentStreak: 7,
+  longestStreak: 12,
+  createdAt: new Date().toISOString(),
+};
+
+export const mockApplications: JobApplication[] = [
+  {
+    id: '1',
+    userId: '1',
+    companyName: 'SAP',
+    positionTitle: 'Full Stack Developer',
+    location: 'Berlin',
+    jobUrl: 'https://linkedin.com/jobs/123',
+    salaryRange: '60000-80000',
+    techStack: 'React, Python, PostgreSQL',
+    status: 'Phone Screen',
+    visaSponsorship: true,
+    germanRequirement: 'Basic',
+    relocationSupport: true,
+    jobBoardSource: 'LinkedIn',
+    priorityStars: 5,
+    notes: 'Great company culture',
+    appliedDate: '2025-01-15',
+    createdAt: '2025-01-15T10:00:00Z',
+    updatedAt: '2025-01-18T14:30:00Z',
+  },
+  {
+    id: '2',
+    userId: '1',
+    companyName: 'Siemens',
+    positionTitle: 'Backend Engineer',
+    location: 'Munich',
+    jobUrl: 'https://linkedin.com/jobs/456',
+    salaryRange: '65000-85000',
+    techStack: 'Python, Django, Docker',
+    status: 'Applied',
+    visaSponsorship: true,
+    germanRequirement: 'None',
+    relocationSupport: false,
+    jobBoardSource: 'StepStone',
+    priorityStars: 4,
+    appliedDate: '2025-01-18',
+    createdAt: '2025-01-18T09:00:00Z',
+    updatedAt: '2025-01-18T09:00:00Z',
+  },
+];
+
+export const mockContacts: NetworkContact[] = [
+  {
+    id: '1',
+    userId: '1',
+    name: 'Rajesh Kumar',
+    email: 'rajesh@example.com',
+    company: 'SAP',
+    relationship: 'Former colleague',
+    connectionStrength: 5,
+    lastContactDate: '2025-01-10',
+    notes: 'Can provide referral',
+  },
+];
+
+export const mockDailyGoals: DailyGoal[] = [
+  {
+    id: '1',
+    userId: '1',
+    date: new Date().toISOString().split('T')[0],
+    goalType: 'Apply to jobs',
+    targetCount: 5,
+    currentCount: 3,
+    completed: false,
+  },
+  {
+    id: '2',
+    userId: '1',
+    date: new Date().toISOString().split('T')[0],
+    goalType: 'Follow up on applications',
+    targetCount: 3,
+    currentCount: 1,
+    completed: false,
+  },
+  {
+    id: '3',
+    userId: '1',
+    date: new Date().toISOString().split('T')[0],
+    goalType: 'Add networking contacts',
+    targetCount: 2,
+    currentCount: 2,
+    completed: true,
+  },
+];
