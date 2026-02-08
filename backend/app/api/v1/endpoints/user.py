@@ -1,50 +1,33 @@
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.db.session import SessionLocal
+from app.api import deps
 from app.models import user as user_model
 from app.schemas import user as user_schema
 
 router = APIRouter()
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 @router.get("/", response_model=user_schema.User)
-def read_user(db: Session = Depends(get_db)) -> Any:
+def read_user(
+    current_user: user_model.User = Depends(deps.get_current_user),
+) -> Any:
     """
     Get current user.
     """
-    # Simply get the first user for now as we are single user
-    user = db.query(user_model.User).first()
-    if not user:
-        # Create default user if not exists
-        user = user_model.User(
-            name="Default User",
-            email="user@example.com",
-            level_name="Novice"
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-    return user
+    return current_user
+
 
 @router.put("/", response_model=user_schema.User)
 def update_user(
     *,
-    db: Session = Depends(get_db),
+    db: Session = Depends(deps.get_db),
     user_in: user_schema.UserUpdate,
+    current_user: user_model.User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Update current user.
     """
-    user = db.query(user_model.User).first()
-    if not user:
-         raise HTTPException(status_code=404, detail="User not found")
+    user = current_user
     
     update_data = user_in.dict(exclude_unset=True)
     for field, value in update_data.items():
