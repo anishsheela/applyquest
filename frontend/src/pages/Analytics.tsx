@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { JobApplication, ApplicationStatus } from '../types';
-import { mockApplications } from '../utils/mockData';
+import { ApplicationStatus } from '../types';
+import { useAppContext } from '../context/AppContext';
 import {
   Filter,
   Download
@@ -12,10 +12,11 @@ import TopCompaniesAnalysis from '../components/analytics/TopCompaniesAnalysis';
 import ApplicationFunnelChart from '../components/analytics/ApplicationFunnelChart';
 import TechStackAnalysis from '../components/analytics/TechStackAnalysis';
 import GermanyMap from '../components/analytics/GermanyMap';
+import ApplicationProcessSankey from '../components/analytics/ApplicationProcessSankey';
 
 
 const Analytics: React.FC = () => {
-  const [applications] = useState<JobApplication[]>(mockApplications);
+  const { applications, loading } = useAppContext();
   const [dateRange, setDateRange] = useState<'30d' | '90d' | '6m' | 'all'>('all');
 
   // Filter applications by date range
@@ -165,6 +166,10 @@ const Analytics: React.FC = () => {
       .sort((a, b) => b.applications - a.applications);
   }, [filteredApplications]);
 
+  if (loading) {
+    return <div className="p-8 text-center text-gray-500">Loading analytics...</div>;
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -199,6 +204,9 @@ const Analytics: React.FC = () => {
 
       {/* Key Metrics Cards */}
       <KeyMetricsCards metrics={metrics} />
+
+      {/* Application Flow Sankey Chart */}
+      <ApplicationProcessSankey applications={filteredApplications} />
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

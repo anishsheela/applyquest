@@ -1,55 +1,24 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { JobApplication, ApplicationStatus } from '../types';
-import { mockApplications } from '../utils/mockData';
+import { applicationService } from '../services/api';
 import KanbanBoard from '../components/kanban/KanbanBoard';
 import ApplicationsTable from '../components/applications/ApplicationsTable';
 import AddApplicationForm from '../components/forms/AddApplicationForm';
 import { Grid, List, Plus, BarChart3 } from 'lucide-react';
+import { useAppContext } from '../context/AppContext';
 
 type ViewMode = 'kanban' | 'table';
 
 const Applications: React.FC = () => {
-  const [applications, setApplications] = useState<JobApplication[]>(mockApplications);
+  const { user, applications, setApplications, loading, setUser } = useAppContext();
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingApplication, setEditingApplication] = useState<JobApplication | undefined>();
 
-  const handleAddApplication = (formData: any) => {
-    const newApplication: JobApplication = {
-      id: Date.now().toString(),
-      userId: '1', // Mock user ID
-      companyName: formData.companyName,
-      positionTitle: formData.positionTitle,
-      location: formData.location,
-      jobUrl: formData.jobUrl,
-      salaryRange: formData.salaryRange,
-      techStack: formData.techStack,
-      status: 'Applied',
-      visaSponsorship: formData.visaSponsorship,
-      germanRequirement: formData.germanRequirement as any,
-      relocationSupport: formData.relocationSupport,
-      jobBoardSource: formData.jobBoardSource,
-      priorityStars: formData.priorityStars,
-      notes: formData.notes,
-      appliedDate: new Date().toISOString().split('T')[0],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    setApplications(prev => [...prev, newApplication]);
-
-    alert(`Application added successfully! 🎉\n\n${formData.companyName} - ${formData.positionTitle}\nYou earned +2 points!`);
-  };
-
-  const handleEditApplication = (application: JobApplication) => {
-    setEditingApplication(application);
-    setShowAddForm(true);
-  };
-
-  const handleUpdateApplication = (formData: any) => {
-    if (editingApplication) {
-      const updatedApplication: JobApplication = {
-        ...editingApplication,
+  const handleAddApplication = async (formData: any) => {
+    try {
+      const newApp = await applicationService.create({
         companyName: formData.companyName,
         positionTitle: formData.positionTitle,
         location: formData.location,
@@ -57,44 +26,100 @@ const Applications: React.FC = () => {
         salaryRange: formData.salaryRange,
         techStack: formData.techStack,
         visaSponsorship: formData.visaSponsorship,
-        germanRequirement: formData.germanRequirement as any,
+        germanRequirement: formData.germanRequirement,
         relocationSupport: formData.relocationSupport,
         jobBoardSource: formData.jobBoardSource,
         priorityStars: formData.priorityStars,
         notes: formData.notes,
-        updatedAt: new Date().toISOString()
-      };
+        referralContactId: formData.referralContactId,
+        appliedDate: new Date().toISOString().split('T')[0], // Backend expects Date or string YYYY-MM-DD
+      });
 
-      setApplications(prev =>
-        prev.map(app =>
-          app.id === editingApplication.id ? updatedApplication : app
-        )
-      );
-
-      alert(`Application updated successfully! ✓\n\n${formData.companyName} - ${formData.positionTitle}`);
+      setApplications(prev => [...prev, newApp]);
+      if (user) {
+        setUser({ ...user, points: user.points + 2 });
+      }
+      toast.success(`Application added! +2 points! 🎉\n${formData.companyName} - ${formData.positionTitle}`, { duration: 4000 });
+    } catch (error) {
+      console.error("Failed to create application:", error);
+      toast.error("Failed to create application. Please try again.");
     }
   };
 
-  const handleDeleteApplication = (applicationId: string) => {
-    setApplications(prev => prev.filter(app => app.id !== applicationId));
-    alert('Application deleted successfully.');
+  const handleEditApplication = (application: JobApplication) => {
+    setEditingApplication(application);
+    setShowAddForm(true);
   };
 
-  const handleStatusUpdate = (applicationId: string, newStatus: ApplicationStatus) => {
-    setApplications(prev =>
-      prev.map(app =>
-        app.id === applicationId
-          ? { ...app, status: newStatus, updatedAt: new Date().toISOString() }
-          : app
-      )
-    );
-  };
-
-  const handleFormSubmit = (formData: any) => {
+  const handleUpdateApplication = async (formData: any) => {
     if (editingApplication) {
-      handleUpdateApplication(formData);
+      try {
+        const updatedApp = await applicationService.update(editingApplication.id, {
+          companyName: formData.companyName,
+          positionTitle: formData.positionTitle,
+          location: formData.location,
+          jobUrl: formData.jobUrl,
+          salaryRange: formData.salaryRange,
+          techStack: formData.techStack,
+          visaSponsorship: formData.visaSponsorship,
+          germanRequirement: formData.germanRequirement,
+          relocationSupport: formData.relocationSupport,
+          jobBoardSource: formData.jobBoardSource,
+          priorityStars: formData.priorityStars,
+          notes: formData.notes,
+          referralContactId: formData.referralContactId,
+        });
+
+        setApplications(prev =>
+          prev.map(app =>
+            app.id === editingApplication.id ? updatedApp : app
+          )
+        );
+
+        if (user) {
+          setUser({ ...user, points: user.points + 1 });
+        }
+
+        toast.success(`Application updated! +1 point! ✓\n${formData.companyName} - ${formData.positionTitle}`, { duration: 4000 });
+      } catch (error) {
+        console.error("Failed to update application:", error);
+        toast.error("Failed to update application. Please try again.");
+      }
+    }
+  };
+
+  const handleDeleteApplication = async (applicationId: string) => {
+    if (window.confirm("Are you sure you want to delete this application?")) {
+      try {
+        await applicationService.delete(applicationId);
+        setApplications(prev => prev.filter(app => app.id !== applicationId));
+        toast.success('Application deleted successfully.');
+      } catch (error) {
+        console.error("Failed to delete application:", error);
+        toast.error("Failed to delete application. Please try again.");
+      }
+    }
+  };
+
+  const handleStatusUpdate = async (applicationId: string, newStatus: ApplicationStatus) => {
+    try {
+      const updatedApp = await applicationService.updateStatus(applicationId, newStatus);
+      setApplications(prev =>
+        prev.map(app =>
+          app.id === applicationId ? updatedApp : app
+        )
+      );
+    } catch (error) {
+      console.error("Failed to update status:", error);
+      toast.error("Failed to update status. Transition might be invalid.");
+    }
+  };
+
+  const handleFormSubmit = async (formData: any) => {
+    if (editingApplication) {
+      await handleUpdateApplication(formData);
     } else {
-      handleAddApplication(formData);
+      await handleAddApplication(formData);
     }
     setShowAddForm(false);
     setEditingApplication(undefined);
@@ -114,6 +139,10 @@ const Applications: React.FC = () => {
     ).length,
     offers: applications.filter(app => app.status === 'Offer').length
   };
+
+  if (loading) {
+    return <div className="p-8 text-center text-gray-500">Loading applications...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -186,22 +215,20 @@ const Applications: React.FC = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={() => setViewMode('kanban')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                viewMode === 'kanban'
-                  ? 'bg-blue-500 text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${viewMode === 'kanban'
+                ? 'bg-blue-500 text-white'
+                : 'text-gray-600 hover:bg-gray-100'
+                }`}
             >
               <Grid className="w-4 h-4" />
               Kanban Board
             </button>
             <button
               onClick={() => setViewMode('table')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                viewMode === 'table'
-                  ? 'bg-blue-500 text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${viewMode === 'table'
+                ? 'bg-blue-500 text-white'
+                : 'text-gray-600 hover:bg-gray-100'
+                }`}
             >
               <List className="w-4 h-4" />
               Table View
@@ -247,7 +274,8 @@ const Applications: React.FC = () => {
             relocationSupport: editingApplication.relocationSupport,
             jobBoardSource: editingApplication.jobBoardSource,
             priorityStars: editingApplication.priorityStars,
-            notes: editingApplication.notes
+            notes: editingApplication.notes,
+            referralContactId: editingApplication.referralContactId
           } : undefined}
         />
       )}

@@ -42,7 +42,7 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         source: "frontend/build/*"
-        target: ${{ secrets.SERVER_PATH }}
+        target: "/home/applyquest/frontend"
         strip_components: 2
         overwrite: true
 
@@ -54,8 +54,8 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
           # Set proper permissions
-          chmod -R 755 ${{ secrets.SERVER_PATH }}
-          find ${{ secrets.SERVER_PATH }} -type f -exec chmod 644 {} \;
+          chmod -R 755 /home/applyquest/frontend
+          find /home/applyquest/frontend -type f -exec chmod 644 {} \;
 
           # Restart web server (adjust based on your server setup)
           # For nginx:

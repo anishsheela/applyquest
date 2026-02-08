@@ -11,7 +11,8 @@ import {
   Star,
   MapPin,
   Calendar,
-  Briefcase
+  Briefcase,
+  Users
 } from 'lucide-react';
 
 interface ApplicationsTableProps {
@@ -348,7 +349,15 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
                         </div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{app.companyName}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-sm font-medium text-gray-900">{app.companyName}</div>
+                          {app.referralContactId && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-purple-100 text-purple-800" title="Referred by network contact">
+                              <Users className="w-3 h-3" />
+                              Referral
+                            </span>
+                          )}
+                        </div>
                         {app.jobBoardSource && (
                           <div className="text-sm text-gray-500">{app.jobBoardSource}</div>
                         )}
