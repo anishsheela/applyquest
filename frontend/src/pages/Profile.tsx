@@ -68,7 +68,6 @@ const Profile: React.FC = () => {
   const currentLevel = user.level;
   const nextLevelPoints = (currentLevel + 1) * 100;
   const currentLevelStartPoints = currentLevel * 100;
-  const progress = ((totalPoints - currentLevelStartPoints) / (nextLevelPoints - currentLevelStartPoints)) * 100;
 
   return (
     <div className="space-y-6">

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ResponsiveContainer, Sankey, Tooltip, Layer, Rectangle, Text } from 'recharts';
+import { ResponsiveContainer, Sankey, Tooltip, Layer, Rectangle } from 'recharts';
 import { JobApplication } from '../../types';
 
 interface ApplicationProcessSankeyProps {
