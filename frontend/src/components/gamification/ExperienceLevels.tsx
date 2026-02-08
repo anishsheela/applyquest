@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy, Star, Target, Zap, Award } from 'lucide-react';
+import { Trophy, Star, Zap, Award } from 'lucide-react';
 
 interface ExperienceLevelsProps {
     currentPoints: number;
