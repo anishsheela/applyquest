@@ -39,5 +39,16 @@ jobs:
             # Pull latest images (if using specific images) or build
             docker compose up -d --build backend db
             
+            # Wait for DB to be ready
+            echo "Waiting for database to be ready..."
+            for i in {1..30}; do
+              if docker compose exec -T db pg_isready -U postgres; then
+                echo "Database is ready!"
+                break
+              fi
+              echo "Database not ready yet, waiting... ($i/30)"
+              sleep 2
+            done
+            
             # Run migrations
             docker compose exec -T backend alembic upgrade head

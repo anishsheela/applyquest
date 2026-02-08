@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { User, JobApplication, NetworkContact, ApplicationStatus } from '../types';
 
-const API_URL = 'http://localhost:8000/api/v1';
+const API_URL = '/api/v1';
 
 const apiClient = axios.create({
     baseURL: API_URL,
