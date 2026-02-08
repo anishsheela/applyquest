@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Briefcase, BarChart3, Users, User, LogOut } from 'lucide-react';
+import { useAppContext } from '../../context/AppContext';
 
 interface LayoutProps {
   children: ReactNode;
@@ -9,6 +10,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useAppContext();
 
   const navItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -42,11 +44,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <button
                     key={item.path}
                     onClick={() => navigate(item.path)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                      isActive(item.path)
-                        ? 'bg-blue-500 text-white shadow-md'
-                        : 'text-gray-600 hover:bg-gray-100'
-                    }`}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${isActive(item.path)
+                      ? 'bg-blue-500 text-white shadow-md'
+                      : 'text-gray-600 hover:bg-gray-100'
+                      }`}
                   >
                     <Icon className="w-5 h-5" />
                     <span className="font-medium">{item.label}</span>
@@ -58,10 +59,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             {/* User Menu */}
             <div className="flex items-center gap-3">
               <div className="text-right hidden md:block">
-                <p className="text-sm font-medium text-gray-800">John Doe</p>
-                <p className="text-xs text-gray-500">Level 2 • 247 pts</p>
+                <p className="text-sm font-medium text-gray-800">{user?.name || 'Guest'}</p>
+                <p className="text-xs text-gray-500">Level {user?.level || 1} • {user?.points || 0} pts</p>
               </div>
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <button
+                onClick={() => {
+                  logout();
+                  navigate('/login');
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Logout"
+              >
                 <LogOut className="w-5 h-5 text-gray-600" />
               </button>
             </div>
@@ -75,11 +83,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <button
                   key={item.path}
                   onClick={() => navigate(item.path)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all ${
-                    isActive(item.path)
-                      ? 'bg-blue-500 text-white shadow-md'
-                      : 'text-gray-600 bg-gray-100'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all ${isActive(item.path)
+                    ? 'bg-blue-500 text-white shadow-md'
+                    : 'text-gray-600 bg-gray-100'
+                    }`}
                 >
                   <Icon className="w-4 h-4" />
                   <span className="text-sm font-medium">{item.label}</span>

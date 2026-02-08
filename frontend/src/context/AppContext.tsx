@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { User, JobApplication, NetworkContact, DailyGoal } from '../types';
 import { userService, applicationService, networkService } from '../services/api';
 
@@ -12,6 +12,9 @@ interface AppContextType {
   dailyGoals: DailyGoal[];
   setDailyGoals: (goals: DailyGoal[]) => void;
   loading: boolean;
+  isAuthenticated: boolean;
+  login: (token: string) => Promise<void>;
+  logout: () => void;
   refreshData: () => Promise<void>;
 }
 
@@ -23,8 +26,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [contacts, setContacts] = useState<NetworkContact[]>([]);
   const [dailyGoals, setDailyGoals] = useState<DailyGoal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!localStorage.getItem('token'));
 
-  const fetchData = async () => {
+  const logout = useCallback(() => {
+    localStorage.removeItem('token');
+    setIsAuthenticated(false);
+    setUser(null);
+    setApplications([]);
+    setContacts([]);
+  }, []);
+
+  const fetchData = useCallback(async () => {
+    if (!isAuthenticated) return;
     try {
       setLoading(true);
       const [userData, appsData, contactsData] = await Promise.all([
@@ -37,14 +50,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setContacts(contactsData);
     } catch (error) {
       console.error("Failed to fetch data:", error);
+      if (localStorage.getItem('token')) {
+        logout();
+      }
     } finally {
       setLoading(false);
     }
+  }, [isAuthenticated, logout]);
+
+  const login = async (token: string) => {
+    localStorage.setItem('token', token);
+    setIsAuthenticated(true);
+    await fetchData();
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (isAuthenticated) {
+      fetchData();
+    } else {
+      setLoading(false);
+    }
+  }, [isAuthenticated, fetchData]);
 
   return (
     <AppContext.Provider
@@ -58,6 +84,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         dailyGoals,
         setDailyGoals,
         loading,
+        isAuthenticated,
+        login,
+        logout,
         refreshData: fetchData,
       }}
     >

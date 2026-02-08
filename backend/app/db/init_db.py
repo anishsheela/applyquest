@@ -4,195 +4,246 @@ from app.db.session import SessionLocal
 from app.models.user import User
 from app.models.application import Application, ApplicationStatus, GermanLevel, ApplicationHistory
 from app.models.network import NetworkContact
+from app.models.point_history import PointHistory
 from datetime import datetime, timedelta
+from app.core.security import get_password_hash
 
 fake = Faker('de_DE')
+
+def create_application_with_history(db, user_id, company, position, final_status, transitions, days_ago_start):
+    """
+    Helper to create an application and its history transitions.
+    transitions[0] is baseline (Applied).
+    Records transitions: transitions[i-1] -> transitions[i]
+    """
+    # User requirement: All status starts from Applied.
+    if not transitions or transitions[0] != ApplicationStatus.APPLIED:
+        transitions = [ApplicationStatus.APPLIED] + transitions
+    
+    app = Application(
+        user_id=user_id,
+        company_name=company,
+        position_title=position,
+        location=fake.city(),
+        job_url=fake.url(),
+        salary_range=f"€{random.randint(50, 90)}k - €{random.randint(90, 130)}k",
+        tech_stack=fake.sentence(nb_words=5),
+        status=final_status,
+        visa_sponsorship=random.choice([True, False]),
+        german_requirement=random.choice([GermanLevel.NONE, GermanLevel.BASIC, GermanLevel.FLUENT]),
+        relocation_support=random.choice([True, False]),
+        job_board_source=random.choice(["LinkedIn", "Indeed", "Company Website", "Xing"]),
+        priority_stars=random.randint(1, 5),
+        notes=f"Application journey for {company}",
+        applied_date=(datetime.utcnow() - timedelta(days=days_ago_start)).date()
+    )
+    db.add(app)
+    db.flush()
+    
+    # Points for initial application
+    db.add(PointHistory(
+        user_id=user_id, 
+        points=2, 
+        reason=f"Applied to {company}", 
+        reference_type="application", 
+        reference_id=app.id,
+        created_at=datetime.utcnow() - timedelta(days=days_ago_start)
+    ))
+    
+    # Process transitions starting from index 1 (Applied is index 0)
+    current_days_ago = days_ago_start
+    
+    for i in range(1, len(transitions)):
+        prev_status = transitions[i-1]
+        current_status = transitions[i]
+        
+        # gap calculation to space out transitions over time
+        gap = random.randint(3, 10)
+        current_days_ago -= gap
+        if current_days_ago < 0: current_days_ago = 0
+        
+        db.add(ApplicationHistory(
+            application_id=app.id,
+            old_status=prev_status,
+            new_status=current_status,
+            notes=f"Status update: {prev_status.value} -> {current_status.value}",
+            changed_at=datetime.utcnow() - timedelta(days=current_days_ago)
+        ))
+        
+        # Points for status updates
+        db.add(PointHistory(
+            user_id=user_id, 
+            points=1, 
+            reason=f"Updated status for {company}", 
+            reference_type="application", 
+            reference_id=app.id,
+            created_at=datetime.utcnow() - timedelta(days=current_days_ago)
+        ))
+        
+    return app
 
 def init_db():
     db = SessionLocal()
     
-    # Check if data already exists
-    if db.query(User).first():
-        print("Database already seeded. Skipping...")
-        db.close()
-        return
+    # 1. Create/Get Demo User
+    demo_user = db.query(User).filter(User.email == "demo@demo.com").first()
+    if not demo_user:
+        demo_user = User(
+            name="Demo User",
+            email="demo@demo.com",
+            hashed_password=get_password_hash("demo"),
+            current_education="B.Sc. Computer Science",
+            german_level="B2",
+            current_role="Junior Developer",
+            level=1,
+            level_name="Novice Seeker",
+            current_streak=7,
+            longest_streak=12
+        )
+        db.add(demo_user)
+        db.commit()
+        db.refresh(demo_user)
 
-    print("Seeding database...")
+    print("Seeding database with refined transitions (No NULL old_status)...")
     
-    # Create User
-    user = User(
-        name="Anish Sheela",
-        email="anish@example.com",
-        current_education="Masters in Computer Science",
-        german_level="B1",
-        current_role="Senior Software Engineer",
-        points=125,
-        level=3,
-        level_name="Job Hunter",
-        current_streak=5,
-        longest_streak=12
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+    # --- DEMO DATA PATHS (Requested by user) ---
     
-    german_levels = list(GermanLevel)
+    # 1. Applied -> Rejected
+    create_application_with_history(db, demo_user.id, "TechCorp Berlin", "Frontend Developer", 
+        ApplicationStatus.REJECTED, [ApplicationStatus.APPLIED, ApplicationStatus.REJECTED], 60)
+
+    # 2. Applied -> Phone Screen -> Rejected
+    # Including 'Replied' as a natural step before phone screen
+    create_application_with_history(db, demo_user.id, "DataFlow Munich", "Software Engineer", 
+        ApplicationStatus.REJECTED, [ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.PHONE_SCREEN, ApplicationStatus.REJECTED], 55)
+
+    # 3. Applied -> Phone Screen -> Technical Round 1 -> Rejected
+    create_application_with_history(db, demo_user.id, "CloudNine Hamburg", "Backend Engineer", 
+        ApplicationStatus.REJECTED, [ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.PHONE_SCREEN, ApplicationStatus.TECHNICAL_ROUND_1, ApplicationStatus.REJECTED], 50)
+
+    # 4. Applied -> Phone Screen -> Technical Round 2 -> Rejected
+    create_application_with_history(db, demo_user.id, "AI-Ventures Dresden", "Fullstack Developer", 
+        ApplicationStatus.REJECTED, [ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.PHONE_SCREEN, ApplicationStatus.TECHNICAL_ROUND_1, ApplicationStatus.TECHNICAL_ROUND_2, ApplicationStatus.REJECTED], 45)
+
+    # 5. Applied -> Phone Screen -> Technical Round 2 -> Final Round -> Rejected
+    create_application_with_history(db, demo_user.id, "FinTech Solutions Frankfurt", "Java Developer", 
+        ApplicationStatus.REJECTED, [ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.PHONE_SCREEN, ApplicationStatus.TECHNICAL_ROUND_1, ApplicationStatus.TECHNICAL_ROUND_2, ApplicationStatus.FINAL_ROUND, ApplicationStatus.REJECTED], 42)
+
+    # 6. Applied -> Phone Screen -> Technical Round 2 -> Final Round -> Offer
+    create_application_with_history(db, demo_user.id, "GreenEnergy Stuttgart", "Python Developer", 
+        ApplicationStatus.OFFER, [ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.PHONE_SCREEN, ApplicationStatus.TECHNICAL_ROUND_1, ApplicationStatus.TECHNICAL_ROUND_2, ApplicationStatus.FINAL_ROUND, ApplicationStatus.OFFER], 38)
+
+    # --- Additional Edge Cases ---
+
+    # 7. Applied -> Ghosted (Early)
+    create_application_with_history(db, demo_user.id, "OldSchool IT", "System Administrator", 
+        ApplicationStatus.GHOSTED, [ApplicationStatus.APPLIED, ApplicationStatus.GHOSTED], 70)
     
-    german_companies = [
-        "SAP", "Siemens", "Deutsche Telekom", "Allianz", "BMW", "Mercedes-Benz", 
-        "Zalando", "HelloFresh", "Delivery Hero", "N26", "Personio", "Celonis", 
-        "Trivago", "SoundCloud", "Infineon", "Henkel", "Bayer", "BASF", "Adidas", 
-        "Puma", "Volkswagen", "Bosch", "Lufthansa", "Deutsche Bank", "Commerzbank",
-        "Trade Republic", "GetYourGuide", "Babbel"
+    # 8. Applied -> Replied -> Ghosted (recruiter reached out but never followed through)
+    create_application_with_history(db, demo_user.id, "BioTech Innovations", "DevOps Engineer", 
+        ApplicationStatus.GHOSTED, [ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.GHOSTED], 32)
+
+    # 9. Applied -> Replied -> Phone Screen -> Ghosted (Late ghosting)
+    create_application_with_history(db, demo_user.id, "FastGrowth Startup", "React Developer", 
+        ApplicationStatus.GHOSTED, [ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.PHONE_SCREEN, ApplicationStatus.GHOSTED], 28)
+
+    # 10. Applied -> Rejected (Immediate/Fast rejection)
+    create_application_with_history(db, demo_user.id, "InstaHire", "Junior Dev", 
+        ApplicationStatus.REJECTED, [ApplicationStatus.APPLIED, ApplicationStatus.REJECTED], 10)
+
+    # 11. Multiple Technical Rounds then Ghosted
+    create_application_with_history(db, demo_user.id, "CyberProtect", "Security Engineer", 
+        ApplicationStatus.GHOSTED, [ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.PHONE_SCREEN, ApplicationStatus.TECHNICAL_ROUND_1, ApplicationStatus.TECHNICAL_ROUND_2, ApplicationStatus.GHOSTED], 48)
+
+    # 12. Active Application (Currently in progress)
+    create_application_with_history(db, demo_user.id, "AutoMotive GmbH", "C++ Developer", 
+        ApplicationStatus.TECHNICAL_ROUND_2, [ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.PHONE_SCREEN, ApplicationStatus.TECHNICAL_ROUND_1, ApplicationStatus.TECHNICAL_ROUND_2], 15)
+
+    # 13. Another Active Application (Applied then Replied)
+    create_application_with_history(db, demo_user.id, "HealthTech", "Mobile Developer", 
+        ApplicationStatus.REPLIED, [ApplicationStatus.APPLIED, ApplicationStatus.REPLIED], 5)
+
+    # 14. Just Applied (Baseline case)
+    create_application_with_history(db, demo_user.id, "Berlin Innovates", "UI/UX Designer", 
+        ApplicationStatus.APPLIED, [ApplicationStatus.APPLIED], 2)
+
+    # 15. Same company different role rejection history
+    create_application_with_history(db, demo_user.id, "Siemens", "Project Manager", 
+        ApplicationStatus.REJECTED, [ApplicationStatus.APPLIED, ApplicationStatus.REJECTED], 50)
+    create_application_with_history(db, demo_user.id, "Siemens", "Technical Lead", 
+        ApplicationStatus.REJECTED, [ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.PHONE_SCREEN, ApplicationStatus.REJECTED], 25)
+
+    # 16. Long journey then rejected at the very end
+    create_application_with_history(db, demo_user.id, "BigBank AG", "Risk Analyst", 
+        ApplicationStatus.REJECTED, [
+            ApplicationStatus.APPLIED, 
+            ApplicationStatus.REPLIED, 
+            ApplicationStatus.PHONE_SCREEN, 
+            ApplicationStatus.TECHNICAL_ROUND_1, 
+            ApplicationStatus.TECHNICAL_ROUND_2, 
+            ApplicationStatus.FINAL_ROUND, 
+            ApplicationStatus.REJECTED
+        ], 65)
+
+    # 17. Path: Applied -> Phone Screen -> Technical Round 1 -> Technical Round 2 -> Ghosted
+    create_application_with_history(db, demo_user.id, "LogisticsX", "Data Engineer",
+        ApplicationStatus.GHOSTED, [
+            ApplicationStatus.APPLIED,
+            ApplicationStatus.REPLIED,
+            ApplicationStatus.PHONE_SCREEN,
+            ApplicationStatus.TECHNICAL_ROUND_1,
+            ApplicationStatus.TECHNICAL_ROUND_2,
+            ApplicationStatus.GHOSTED
+        ], 58)
+
+    # --- Network Contacts ---
+    contacts = [
+        {"name": "Sarah Müller", "company": "TechCorp Berlin", "email": "s.mueller@techcorp.de"},
+        {"name": "Hans Wagner", "company": "AI-Ventures Dresden", "email": "h.wagner@ai-ventures.com"},
+        {"name": "Petra Klein", "company": "Siemens", "email": "p.klein@siemens.com"},
+        {"name": "Markus Weber", "company": "AutoMotive GmbH", "email": "m.weber@automotive.de"},
+        {"name": "Julia Fischer", "company": "HealthTech", "email": "j.fischer@healthtech.com"},
     ]
-
-    # Create Network Contacts FIRST (so we can reference them in applications)
-    contacts = []
-    for _ in range(10):
+    
+    for c_data in contacts:
         contact = NetworkContact(
-            user_id=user.id,
-            name=fake.name(),
-            email=fake.email(),
-            company=random.choice(german_companies),
-            relationship_type=random.choice(["Recruiter", "Hiring Manager", "Peer", "Alumni"]),
-            connection_strength=random.randint(1, 10),
-            last_contact_date=fake.date_between(start_date='-60d', end_date='today'),
-            notes=fake.text()
+            user_id=demo_user.id,
+            name=c_data["name"],
+            company=c_data["company"],
+            email=c_data["email"],
+            relationship_type="LinkedIn Connection",
+            connection_strength=3,
+            last_contact_date=(datetime.utcnow() - timedelta(days=random.randint(1, 30))).date(),
+            notes=fake.sentence()
         )
         db.add(contact)
-        contacts.append(contact)
+        db.flush()
+        db.add(PointHistory(
+            user_id=demo_user.id, 
+            points=1, 
+            reason=f"Connected with {contact.name}", 
+            reference_type="network_contact", 
+            reference_id=contact.id,
+            created_at=datetime.utcnow() - timedelta(days=random.randint(1, 15))
+        ))
+
+    db.commit()
+    
+    # Refresh demo user to trigger point calculation property if needed, 
+    # but we usually care about the level update logic
+    db.refresh(demo_user)
+    
+    # Update level/streak based on accumulated points and dates
+    from app.core.gamification import LEVELS
+    for level_data in LEVELS:
+        if demo_user.points >= level_data["minPoints"]:
+            demo_user.level = level_data["level"]
+            demo_user.level_name = level_data["name"]
     
     db.commit()
-    for contact in contacts:
-        db.refresh(contact)
-    
-    # Create 50 Applications with diverse outcomes
-    applications_to_create = []
-    
-    # Ensure we have rejections and ghosting from EVERY stage
-    patterns = [
-        # Rejections from each stage
-        ([ApplicationStatus.APPLIED, ApplicationStatus.REJECTED], 3),
-        ([ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.REJECTED], 3),
-        ([ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.PHONE_SCREEN, ApplicationStatus.REJECTED], 3),
-        ([ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.PHONE_SCREEN, ApplicationStatus.TECHNICAL_ROUND_1, ApplicationStatus.REJECTED], 3),
-        ([ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.PHONE_SCREEN, ApplicationStatus.TECHNICAL_ROUND_1, ApplicationStatus.TECHNICAL_ROUND_2, ApplicationStatus.REJECTED], 2),
-        ([ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.PHONE_SCREEN, ApplicationStatus.TECHNICAL_ROUND_1, ApplicationStatus.TECHNICAL_ROUND_2, ApplicationStatus.FINAL_ROUND, ApplicationStatus.REJECTED], 2),
-        
-        # Ghosted from each stage
-        ([ApplicationStatus.APPLIED, ApplicationStatus.GHOSTED], 2),
-        ([ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.GHOSTED], 2),
-        ([ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.PHONE_SCREEN, ApplicationStatus.GHOSTED], 2),
-        ([ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.PHONE_SCREEN, ApplicationStatus.TECHNICAL_ROUND_1, ApplicationStatus.GHOSTED], 2),
-        ([ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.PHONE_SCREEN, ApplicationStatus.TECHNICAL_ROUND_1, ApplicationStatus.TECHNICAL_ROUND_2, ApplicationStatus.GHOSTED], 2),
-        ([ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.PHONE_SCREEN, ApplicationStatus.TECHNICAL_ROUND_1, ApplicationStatus.TECHNICAL_ROUND_2, ApplicationStatus.FINAL_ROUND, ApplicationStatus.GHOSTED], 1),
-        
-        # Success paths
-        ([ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.PHONE_SCREEN, ApplicationStatus.TECHNICAL_ROUND_1, ApplicationStatus.TECHNICAL_ROUND_2, ApplicationStatus.FINAL_ROUND, ApplicationStatus.OFFER], 5),
-        
-        # Active/In-progress at various stages
-        ([ApplicationStatus.APPLIED], 3),
-        ([ApplicationStatus.APPLIED, ApplicationStatus.REPLIED], 2),
-        ([ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.PHONE_SCREEN], 2),
-        ([ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.PHONE_SCREEN, ApplicationStatus.TECHNICAL_ROUND_1], 2),
-        ([ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.PHONE_SCREEN, ApplicationStatus.TECHNICAL_ROUND_1, ApplicationStatus.TECHNICAL_ROUND_2], 1),
-        ([ApplicationStatus.APPLIED, ApplicationStatus.REPLIED, ApplicationStatus.PHONE_SCREEN, ApplicationStatus.TECHNICAL_ROUND_1, ApplicationStatus.TECHNICAL_ROUND_2, ApplicationStatus.FINAL_ROUND], 1),
-    ]
-    
-    for path_template, count in patterns:
-        for _ in range(count):
-            applications_to_create.append(path_template)
-    
-    # Shuffle to randomize order
-    random.shuffle(applications_to_create)
-    
-    for path in applications_to_create:
-        final_status = path[-1]
-        
-        # Generate Times
-        start_date = fake.date_between(start_date='-90d', end_date='today')
-        current_time = datetime.combine(start_date, datetime.min.time())
-        
-        # Timestamps for each step
-        timestamps = [current_time]
-        for _ in range(len(path) - 1):
-            # Advance time by 2-10 days for each step
-            days_delta = random.randint(2, 10)
-            current_time += timedelta(days=days_delta)
-            timestamps.append(current_time)
-
-        # Randomly assign a referral contact (30% chance)
-        referral_contact_id = None
-        if random.random() < 0.3 and contacts:
-            referral_contact_id = random.choice(contacts).id
-
-        # German Data Lists
-        german_cities = [
-            "Berlin", "Munich", "Hamburg", "Cologne", "Frankfurt", "Stuttgart", "Düsseldorf", 
-            "Leipzig", "Dresden", "Nuremberg", "Bremen", "Hannover"
-        ]
-        
-        german_companies = [
-            "SAP", "Siemens", "Deutsche Telekom", "Allianz", "BMW", "Mercedes-Benz", 
-            "Zalando", "HelloFresh", "Delivery Hero", "N26", "Personio", "Celonis", 
-            "Trivago", "SoundCloud", "Infineon", "Henkel", "Bayer", "BASF", "Adidas", 
-            "Puma", "Volkswagen", "Bosch", "Lufthansa", "Deutsche Bank", "Commerzbank",
-            "Trade Republic", "GetYourGuide", "Babbel"
-        ]
-        
-        it_jobs = [
-            "Software Engineer", "Senior Software Engineer", "Frontend Developer", 
-            "Backend Developer", "Full Stack Developer", "DevOps Engineer", 
-            "Data Scientist", "Machine Learning Engineer", "Product Manager", 
-            "Scrum Master", "QA Engineer", "Cloud Architect", "Systems Administrator", 
-            "Security Engineer", "Engineering Manager", "CTO", "Tech Lead"
-        ]
-
-        # Create Application Record
-        app = Application(
-            user_id=user.id,
-            company_name=random.choice(german_companies),
-            position_title=random.choice(it_jobs),
-            location=random.choice(german_cities),
-            job_url=fake.url(),
-            salary_range=f"{random.randint(50, 90)}k - {random.randint(90, 140)}k",
-            tech_stack="Python, React, Docker, AWS",
-            status=final_status,
-            visa_sponsorship=random.choice([True, False]),
-            german_requirement=random.choice(german_levels),
-            relocation_support=random.choice([True, False]),
-            job_board_source=random.choice(["LinkedIn", "Indeed", "Glassdoor", "Company Site", "StepStone", "Xing"]),
-            priority_stars=random.randint(1, 5),
-            notes=fake.text(),
-            applied_date=start_date,
-            created_at=timestamps[0],
-            updated_at=timestamps[-1],
-            referral_contact_id=referral_contact_id
-        )
-        db.add(app)
-        db.commit()
-        db.refresh(app)
-        
-        
-        # Create History Records
-        # Only create history for actual transitions (skip the first "Applied" state)
-        for i in range(1, len(path)):
-            old_s = path[i-1]
-            new_s = path[i]
-            
-            history = ApplicationHistory(
-                application_id=app.id,
-                old_status=old_s,
-                new_status=new_s,
-                notes=f"Transitioned from {old_s} to {new_s}",
-                changed_at=timestamps[i]
-            )
-            db.add(history)
-            
-        db.commit()
-
+    print(f"✅ Database seeded with {db.query(Application).filter(Application.user_id == demo_user.id).count()} applications for demo user.")
+    print(f"✅ Demo user now has {demo_user.points} points.")
     db.close()
-    print("Database seeded successfully with randomized valid transitions!")
 
 if __name__ == "__main__":
     init_db()

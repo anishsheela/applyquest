@@ -1,7 +1,7 @@
 from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
-from app.db.session import SessionLocal
+from app.api import deps
 from app.models import application as application_model
 from app.models import user as user_model
 from app.schemas import application as application_schema
@@ -9,56 +9,46 @@ from app.models.application import ApplicationStatus
 
 router = APIRouter()
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-# Helper to get current user (assuming single user)
-def get_current_user(db: Session):
-    user = db.query(user_model.User).first()
-    if not user:
-         # Auto-create if missing for development ease
-        user = user_model.User(name="Default User", email="user@example.com")
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-    return user
-
 @router.get("/", response_model=List[application_schema.Application])
 def read_applications(
     skip: int = 0,
     limit: int = 100,
-    db: Session = Depends(get_db),
+    db: Session = Depends(deps.get_db),
+    current_user: user_model.User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Retrieve applications.
     """
-    user = get_current_user(db)
-    applications = db.query(application_model.Application).filter(application_model.Application.user_id == user.id).offset(skip).limit(limit).all()
+    applications = db.query(application_model.Application).filter(application_model.Application.user_id == current_user.id).offset(skip).limit(limit).all()
     return applications
 
 @router.post("/", response_model=application_schema.Application)
 def create_application(
     *,
-    db: Session = Depends(get_db),
+    db: Session = Depends(deps.get_db),
     application_in: application_schema.ApplicationCreate,
+    current_user: user_model.User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Create new application.
     """
-    user = get_current_user(db)
     application = application_model.Application(
         **application_in.dict(),
-        user_id=user.id
+        user_id=current_user.id
     )
     db.add(application)
+    db.flush()  # Get the application ID
     
-    # Award 2 points for creating an application
-    user.points += 2
-    db.add(user)
+    # Update gamification stats (2 points)
+    from app.core import gamification
+    gamification.add_points(
+        db=db,
+        user=current_user,
+        points=2,
+        reason="Created new application",
+        reference_type="application",
+        reference_id=application.id
+    )
     
     db.commit()
     db.refresh(application)
@@ -77,13 +67,17 @@ def create_application(
 @router.get("/{id}", response_model=application_schema.Application)
 def read_application(
     *,
-    db: Session = Depends(get_db),
+    db: Session = Depends(deps.get_db),
     id: str,
+    current_user: user_model.User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Get application by ID.
     """
-    application = db.query(application_model.Application).filter(application_model.Application.id == id).first()
+    application = db.query(application_model.Application).filter(
+        application_model.Application.id == id,
+        application_model.Application.user_id == current_user.id
+    ).first()
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
     return application
@@ -91,18 +85,20 @@ def read_application(
 @router.put("/{id}", response_model=application_schema.Application)
 def update_application(
     *,
-    db: Session = Depends(get_db),
+    db: Session = Depends(deps.get_db),
     id: str,
     application_in: application_schema.ApplicationUpdate,
+    current_user: user_model.User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Update an application.
     """
-    application = db.query(application_model.Application).filter(application_model.Application.id == id).first()
+    application = db.query(application_model.Application).filter(
+        application_model.Application.id == id,
+        application_model.Application.user_id == current_user.id
+    ).first()
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
-    
-    user = get_current_user(db)
     
     update_data = application_in.dict(exclude_unset=True)
     for field, value in update_data.items():
@@ -110,9 +106,16 @@ def update_application(
     
     db.add(application)
     
-    # Award 1 point for updating an application
-    user.points += 1
-    db.add(user)
+    # Update gamification stats (1 point for update)
+    from app.core import gamification
+    gamification.add_points(
+        db=db,
+        user=current_user,
+        points=1,
+        reason="Updated application",
+        reference_type="application",
+        reference_id=application.id
+    )
     
     db.commit()
     db.refresh(application)
@@ -121,15 +124,19 @@ def update_application(
 @router.patch("/{id}/status", response_model=application_schema.Application)
 def update_application_status(
     *,
-    db: Session = Depends(get_db),
+    db: Session = Depends(deps.get_db),
     id: str,
     new_status: ApplicationStatus = Body(embed=True),
     notes: str = Body(default=None, embed=True),
+    current_user: user_model.User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Update application status with strict transition rules.
     """
-    application = db.query(application_model.Application).filter(application_model.Application.id == id).first()
+    application = db.query(application_model.Application).filter(
+        application_model.Application.id == id,
+        application_model.Application.user_id == current_user.id
+    ).first()
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
 
@@ -178,13 +185,17 @@ def update_application_status(
 @router.delete("/{id}", response_model=application_schema.Application)
 def delete_application(
     *,
-    db: Session = Depends(get_db),
+    db: Session = Depends(deps.get_db),
     id: str,
+    current_user: user_model.User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Delete an application.
     """
-    application = db.query(application_model.Application).filter(application_model.Application.id == id).first()
+    application = db.query(application_model.Application).filter(
+        application_model.Application.id == id,
+        application_model.Application.user_id == current_user.id
+    ).first()
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
     

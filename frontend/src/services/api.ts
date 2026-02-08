@@ -10,6 +10,17 @@ const apiClient = axios.create({
     },
 });
 
+// Add a request interceptor to include the auth token
+apiClient.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+}, (error) => {
+    return Promise.reject(error);
+});
+
 // Helper to transform snake_case to camelCase
 const transformUser = (data: any): User => ({
     id: data.id,
@@ -88,6 +99,17 @@ const toSnakeCase = (data: any): any => {
 
 
 export const userService = {
+    login: async (username: string, password: string): Promise<string> => {
+        const formData = new FormData();
+        formData.append('username', username);
+        formData.append('password', password);
+        const response = await apiClient.post('/access-token', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data.access_token;
+    },
     getCurrentUser: async (): Promise<User> => {
         const response = await apiClient.get('/user/');
         return transformUser(response.data);
