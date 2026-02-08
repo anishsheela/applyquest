@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AppProvider } from './context/AppContext';
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
@@ -11,6 +12,7 @@ import Profile from './pages/Profile';
 function App() {
   return (
     <AppProvider>
+      <Toaster position="top-right" reverseOrder={false} />
       <Router>
         <Layout>
           <Routes>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapPin, Star, Calendar, ExternalLink, Edit, Trash2 } from 'lucide-react';
+import { MapPin, Star, Calendar, ExternalLink, Edit, Trash2, Users } from 'lucide-react';
 import { JobApplication, ApplicationStatus } from '../../types';
 
 interface KanbanBoardProps {
@@ -129,7 +129,14 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                       {/* Card Header */}
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
-                          <h4 className="font-bold text-gray-800 mb-1">{app.companyName}</h4>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-bold text-gray-800">{app.companyName}</h4>
+                            {app.referralContactId && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-purple-100 text-purple-800" title="Referred by network contact">
+                                <Users className="w-3 h-3" />
+                              </span>
+                            )}
+                          </div>
                           <p className="text-sm text-gray-600">{app.positionTitle}</p>
                         </div>
                         <div className="flex gap-1">

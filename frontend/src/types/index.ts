@@ -32,6 +32,17 @@ export interface JobApplication {
   appliedDate: string;
   createdAt: string;
   updatedAt: string;
+  history?: ApplicationHistory[];
+  referralContactId?: string;
+}
+
+export interface ApplicationHistory {
+  id: string;
+  applicationId: string;
+  oldStatus?: string;
+  newStatus: ApplicationStatus;
+  notes?: string;
+  changedAt: string;
 }
 
 export type ApplicationStatus =

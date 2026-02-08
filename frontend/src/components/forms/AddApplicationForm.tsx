@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { X, Briefcase, MapPin, DollarSign, Code, Star, Link2, Globe, Building } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Briefcase, MapPin, DollarSign, Code, Star, Link2, Globe, Building, Users } from 'lucide-react';
+import { api } from '../../services/api';
+import type { NetworkContact } from '../../types';
 
 interface ApplicationFormData {
   companyName: string;
@@ -14,6 +16,7 @@ interface ApplicationFormData {
   jobBoardSource: string;
   priorityStars: number;
   notes: string;
+  referralContactId?: string;
 }
 
 interface AddApplicationFormProps {
@@ -40,11 +43,28 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
     relocationSupport: initialData?.relocationSupport || false,
     jobBoardSource: initialData?.jobBoardSource || '',
     priorityStars: initialData?.priorityStars || 3,
-    notes: initialData?.notes || ''
+    notes: initialData?.notes || '',
+    referralContactId: initialData?.referralContactId || ''
   });
+
+  const [networkContacts, setNetworkContacts] = useState<NetworkContact[]>([]);
+  const [contactSearch, setContactSearch] = useState('');
+  const [showContactDropdown, setShowContactDropdown] = useState(false);
 
   const germanLevels = ['None', 'Basic', 'Fluent'];
   const jobBoards = ['LinkedIn', 'StepStone', 'Indeed', 'Xing', 'Company Website', 'Referral', 'Other'];
+
+  useEffect(() => {
+    const fetchContacts = async () => {
+      try {
+        const contacts = await api.getNetworkContacts();
+        setNetworkContacts(contacts);
+      } catch (error) {
+        console.error('Failed to fetch network contacts:', error);
+      }
+    };
+    fetchContacts();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -74,7 +94,7 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
             <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Briefcase className="w-6 h-6" />
-                <h2 className="text-2xl font-bold">Add New Application</h2>
+                <h2 className="text-2xl font-bold">{initialData?.companyName ? 'Edit Application' : 'Add New Application'}</h2>
               </div>
               <button
                 onClick={onClose}
@@ -282,17 +302,106 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
                       className="transition-transform hover:scale-110"
                     >
                       <Star
-                        className={`w-8 h-8 ${
-                          star <= formData.priorityStars
-                            ? 'fill-yellow-400 text-yellow-400'
-                            : 'text-gray-300'
-                        }`}
+                        className={`w-8 h-8 ${star <= formData.priorityStars
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'text-gray-300'
+                          }`}
                       />
                     </button>
                   ))}
                   <span className="ml-2 text-sm text-gray-600">
                     ({formData.priorityStars} {formData.priorityStars === 1 ? 'star' : 'stars'})
                   </span>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                  <Users className="w-5 h-5 text-blue-500" />
+                  Referral Contact (Optional)
+                </h3>
+                <div className="relative">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Got this position through a contact?
+                  </label>
+
+                  {formData.referralContactId && networkContacts.find(c => c.id === formData.referralContactId) ? (
+                    <div className="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold border border-purple-200">
+                          {networkContacts.find(c => c.id === formData.referralContactId)?.name.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {networkContacts.find(c => c.id === formData.referralContactId)?.name}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {networkContacts.find(c => c.id === formData.referralContactId)?.company}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, referralContactId: '' }));
+                          setContactSearch('');
+                        }}
+                        className="p-2 hover:bg-purple-100 rounded-full text-gray-500 hover:text-red-500 transition-colors"
+                        title="Remove referral"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <input
+                        type="text"
+                        value={contactSearch}
+                        onChange={(e) => {
+                          setContactSearch(e.target.value);
+                          setShowContactDropdown(true);
+                        }}
+                        onFocus={() => setShowContactDropdown(true)}
+                        placeholder="Search contacts..."
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      {showContactDropdown && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                          <div
+                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-600"
+                            onClick={() => {
+                              setFormData(prev => ({ ...prev, referralContactId: '' }));
+                              setContactSearch('');
+                              setShowContactDropdown(false);
+                            }}
+                          >
+                            No referral contact
+                          </div>
+                          {networkContacts
+                            .filter(contact =>
+                              contact.name.toLowerCase().includes(contactSearch.toLowerCase()) ||
+                              (contact.company && contact.company.toLowerCase().includes(contactSearch.toLowerCase()))
+                            )
+                            .map(contact => (
+                              <div
+                                key={contact.id}
+                                className="px-4 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                                onClick={() => {
+                                  setFormData(prev => ({ ...prev, referralContactId: contact.id }));
+                                  setContactSearch(contact.name);
+                                  setShowContactDropdown(false);
+                                }}
+                              >
+                                <div className="font-medium text-gray-900">{contact.name}</div>
+                                {contact.company && (
+                                  <div className="text-sm text-gray-500">{contact.company}</div>
+                                )}
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -323,7 +432,7 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
                   onClick={handleSubmit}
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg transition-all font-medium"
                 >
-                  Add Application (+2 points)
+                  {initialData?.companyName ? 'Update Application (+1 point)' : 'Add Application (+2 points)'}
                 </button>
               </div>
             </div>
