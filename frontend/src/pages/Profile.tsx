@@ -60,14 +60,8 @@ const Profile: React.FC = () => {
   }
 
   // Calculate stats
-  const totalPoints = user.points;
   const currentStreak = user.currentStreak;
   const longestStreak = user.longestStreak;
-
-  // Calculate level progress
-  const currentLevel = user.level;
-  const nextLevelPoints = (currentLevel + 1) * 100;
-  const currentLevelStartPoints = currentLevel * 100;
 
   return (
     <div className="space-y-6">

@@ -1,6 +1,6 @@
 import React from 'react';
 import { User } from '../../types';
-import { User as UserIcon, Mail, GraduationCap, Languages, Briefcase, Save, X, Award, MapPin, Globe, Calendar, Star, Trophy } from 'lucide-react';
+import { User as UserIcon, Mail, GraduationCap, Languages, Briefcase, Save, X } from 'lucide-react';
 
 interface UserProfileProps {
     user: User;
