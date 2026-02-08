@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy, Star, TrendingUp, Award, Zap } from 'lucide-react';
+import { Trophy, Star, Target, Zap, Award } from 'lucide-react';
 
 interface ExperienceLevelsProps {
     currentPoints: number;
@@ -91,10 +91,10 @@ const ExperienceLevels: React.FC<ExperienceLevelsProps> = ({ currentPoints }) =>
                                 </span>
 
                                 <div className={`p-3 rounded-lg border ${isCurrent
-                                        ? 'bg-green-50 border-green-200 shadow-sm'
-                                        : isUnlocked
-                                            ? 'bg-gray-50 border-gray-100'
-                                            : 'bg-transparent border-transparent opacity-60'
+                                    ? 'bg-green-50 border-green-200 shadow-sm'
+                                    : isUnlocked
+                                        ? 'bg-gray-50 border-gray-100'
+                                        : 'bg-transparent border-transparent opacity-60'
                                     }`}>
                                     <h5 className={`font-bold ${isCurrent ? 'text-green-800' : 'text-gray-800'}`}>
                                         {lvl.name}
