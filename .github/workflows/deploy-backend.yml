@@ -37,7 +37,7 @@ jobs:
             # echo "POSTGRES_USER=${{ secrets.DB_USER }}" > .env
             
             # Pull latest images (if using specific images) or build
-            docker-compose up -d --build backend db
+            docker compose up -d --build backend db
             
             # Run migrations
-            docker-compose exec -T backend alembic upgrade head
+            docker compose exec -T backend alembic upgrade head
