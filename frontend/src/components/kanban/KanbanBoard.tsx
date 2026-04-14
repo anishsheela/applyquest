@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MapPin, Star, Calendar, ExternalLink, Edit, Trash2, Users } from 'lucide-react';
 import { JobApplication, ApplicationStatus } from '../../types';
+import { useAppContext } from '../../context/AppContext';
 
 interface KanbanBoardProps {
   applications: JobApplication[];
@@ -16,6 +17,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
   onDelete
 }) => {
   const stages = [
+    { id: 'Shortlisted', name: 'Shortlisted', color: 'bg-teal-500' },
     { id: 'Applied', name: 'Applied', color: 'bg-blue-500' },
     { id: 'Replied', name: 'Replied', color: 'bg-purple-500' },
     { id: 'Phone Screen', name: 'Phone Screen', color: 'bg-yellow-500' },
@@ -28,17 +30,21 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
   ];
 
 
+  const { isMentorView } = useAppContext();
   const [draggedItem, setDraggedItem] = useState<JobApplication | null>(null);
 
   const handleDragStart = (app: JobApplication) => {
+    if (isMentorView) return;
     setDraggedItem(app);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
+    if (isMentorView) return;
     e.preventDefault();
   };
 
   const handleDrop = (stageId: string) => {
+    if (isMentorView) return;
     if (draggedItem) {
       onStatusUpdate(draggedItem.id, stageId as ApplicationStatus);
       setDraggedItem(null);
@@ -122,9 +128,9 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                   {stageApps.map((app) => (
                     <div
                       key={app.id}
-                      draggable
+                      draggable={!isMentorView}
                       onDragStart={() => handleDragStart(app)}
-                      className="bg-white rounded-lg p-4 shadow-md hover:shadow-lg transition-all cursor-move border-2 border-transparent hover:border-blue-300"
+                      className={`bg-white rounded-lg p-4 shadow-md hover:shadow-lg transition-all border-2 border-transparent hover:border-blue-300 ${isMentorView ? 'cursor-default' : 'cursor-move'}`}
                     >
                       {/* Card Header */}
                       <div className="flex items-start justify-between mb-2">
@@ -195,25 +201,45 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                               <ExternalLink className="w-4 h-4" />
                             </button>
                           )}
-                          <button
-                            onClick={() => onEdit(app)}
-                            className="text-gray-500 hover:text-blue-700 p-1"
-                            title="Edit application"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(app.id)}
-                            className="text-gray-500 hover:text-red-700 p-1"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {!isMentorView && (
+                            <>
+                              <button
+                                onClick={() => onEdit(app)}
+                                className="text-gray-500 hover:text-blue-700 p-1"
+                                title="Edit application"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(app.id)}
+                                className="text-gray-500 hover:text-red-700 p-1"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
 
                       {/* Quick Action Buttons */}
-                      {app.status !== 'Rejected' && app.status !== 'Ghosted' && (
+                      {!isMentorView && app.status === 'Shortlisted' && (
+                        <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                          <button
+                            onClick={() => handleQuickStatus(app.id, 'Applied')}
+                            className="flex-1 bg-blue-50 text-blue-700 text-xs py-2 rounded-lg hover:bg-blue-100 transition-colors font-medium"
+                          >
+                            Mark Applied
+                          </button>
+                          <button
+                            onClick={() => handleQuickStatus(app.id, 'Rejected')}
+                            className="flex-1 bg-red-50 text-red-700 text-xs py-2 rounded-lg hover:bg-red-100 transition-colors font-medium"
+                          >
+                            Skip
+                          </button>
+                        </div>
+                      )}
+                      {!isMentorView && app.status !== 'Shortlisted' && app.status !== 'Rejected' && app.status !== 'Ghosted' && (
                         <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
                           <button
                             onClick={() => handleQuickStatus(app.id, 'Rejected')}

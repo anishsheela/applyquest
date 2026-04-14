@@ -29,9 +29,8 @@ const ApplyQuestDashboard: React.FC = () => {
 
     // Count contacts added today
     const contactsToday = contacts.filter(contact => {
-      const contactDate = (contact as any).created_at || (contact as any).createdAt;
-      if (!contactDate) return false;
-      return new Date(contactDate).toISOString().split('T')[0] === today;
+      if (!contact.createdAt) return false;
+      return new Date(contact.createdAt).toISOString().split('T')[0] === today;
     }).length;
 
     return { applied: appliedToday, contacts: contactsToday };

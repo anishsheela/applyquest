@@ -3,6 +3,7 @@ import { NetworkContact, JobApplication } from '../../types';
 import NetworkContactCard from './NetworkContactCard';
 import AddNetworkContactForm from './AddNetworkContactForm';
 import { Plus, Search, Users } from 'lucide-react';
+import { useAppContext } from '../../context/AppContext';
 
 interface NetworkListProps {
   contacts: NetworkContact[];
@@ -19,6 +20,7 @@ const NetworkList: React.FC<NetworkListProps> = ({
   onEditContact,
   onDeleteContact
 }) => {
+  const { isMentorView } = useAppContext();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<NetworkContact | undefined>();
   const [searchTerm, setSearchTerm] = useState('');
@@ -83,13 +85,15 @@ const NetworkList: React.FC<NetworkListProps> = ({
             </h2>
             <p className="text-gray-600 mt-1">Manage your professional network</p>
           </div>
-          <button
-            onClick={() => setIsFormOpen(true)}
-            className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl px-6 py-3 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-2"
-          >
-            <Plus className="w-5 h-5" />
-            Add Contact
-          </button>
+          {!isMentorView && (
+            <button
+              onClick={() => setIsFormOpen(true)}
+              className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl px-6 py-3 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-2"
+            >
+              <Plus className="w-5 h-5" />
+              Add Contact
+            </button>
+          )}
         </div>
 
         {/* Stats Cards */}
@@ -134,7 +138,7 @@ const NetworkList: React.FC<NetworkListProps> = ({
               : 'Try adjusting your search terms.'
             }
           </p>
-          {contacts.length === 0 && (
+          {contacts.length === 0 && !isMentorView && (
             <button
               onClick={() => setIsFormOpen(true)}
               className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl px-6 py-3 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 inline-flex items-center gap-2"

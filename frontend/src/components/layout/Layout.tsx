@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Briefcase, BarChart3, Users, User, LogOut } from 'lucide-react';
+import { LayoutDashboard, Briefcase, BarChart3, Users, User, LogOut, Eye } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 
 interface LayoutProps {
@@ -10,7 +10,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAppContext();
+  const { user, logout, isMentorView } = useAppContext();
 
   const navItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -58,9 +58,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
             {/* User Menu */}
             <div className="flex items-center gap-3">
+              {isMentorView && (
+                <span className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-xs font-medium">
+                  <Eye className="w-3.5 h-3.5" />
+                  Read-only
+                </span>
+              )}
               <div className="text-right hidden md:block">
                 <p className="text-sm font-medium text-gray-800">{user?.name || 'Guest'}</p>
-                <p className="text-xs text-gray-500">Level {user?.level || 1} • {user?.points || 0} pts</p>
+                <p className="text-xs text-gray-500">
+                  {isMentorView ? 'Mentor View' : `Level ${user?.level || 1} • ${user?.points || 0} pts`}
+                </p>
               </div>
               <button
                 onClick={() => {

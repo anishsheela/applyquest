@@ -11,7 +11,7 @@ import { useAppContext } from '../context/AppContext';
 type ViewMode = 'kanban' | 'table';
 
 const Applications: React.FC = () => {
-  const { user, applications, setApplications, loading, setUser } = useAppContext();
+  const { applications, setApplications, loading, refreshData, isMentorView } = useAppContext();
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingApplication, setEditingApplication] = useState<JobApplication | undefined>();
@@ -31,18 +31,20 @@ const Applications: React.FC = () => {
         jobBoardSource: formData.jobBoardSource,
         priorityStars: formData.priorityStars,
         notes: formData.notes,
-        referralContactId: formData.referralContactId,
+        referralContactId: formData.referralContactId || undefined,
         appliedDate: new Date().toISOString().split('T')[0], // Backend expects Date or string YYYY-MM-DD
       });
 
       setApplications(prev => [...prev, newApp]);
-      if (user) {
-        setUser({ ...user, points: user.points + 2 });
-      }
+      refreshData();
       toast.success(`Application added! +2 points! 🎉\n${formData.companyName} - ${formData.positionTitle}`, { duration: 4000 });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to create application:", error);
-      toast.error("Failed to create application. Please try again.");
+      const detail = error?.response?.data?.detail;
+      const message = Array.isArray(detail)
+        ? detail.map((e: any) => `${e.loc?.slice(-1)[0]}: ${e.msg}`).join('; ')
+        : detail || "Failed to create application. Please try again.";
+      toast.error(message);
     }
   };
 
@@ -67,7 +69,7 @@ const Applications: React.FC = () => {
           jobBoardSource: formData.jobBoardSource,
           priorityStars: formData.priorityStars,
           notes: formData.notes,
-          referralContactId: formData.referralContactId,
+          referralContactId: formData.referralContactId || undefined,
         });
 
         setApplications(prev =>
@@ -76,14 +78,15 @@ const Applications: React.FC = () => {
           )
         );
 
-        if (user) {
-          setUser({ ...user, points: user.points + 1 });
-        }
-
+        refreshData();
         toast.success(`Application updated! +1 point! ✓\n${formData.companyName} - ${formData.positionTitle}`, { duration: 4000 });
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to update application:", error);
-        toast.error("Failed to update application. Please try again.");
+        const detail = error?.response?.data?.detail;
+        const message = Array.isArray(detail)
+          ? detail.map((e: any) => `${e.loc?.slice(-1)[0]}: ${e.msg}`).join('; ')
+          : detail || "Failed to update application. Please try again.";
+        toast.error(message);
       }
     }
   };
@@ -153,13 +156,15 @@ const Applications: React.FC = () => {
             <h1 className="text-3xl font-bold text-gray-800 mb-2">Job Applications</h1>
             <p className="text-gray-600">Track and manage your job search applications</p>
           </div>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl px-6 py-3 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-2"
-          >
-            <Plus className="w-5 h-5" />
-            Add Application
-          </button>
+          {!isMentorView && (
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl px-6 py-3 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center gap-2"
+            >
+              <Plus className="w-5 h-5" />
+              Add Application
+            </button>
+          )}
         </div>
 
         {/* Stats */}

@@ -17,6 +17,7 @@ interface StatusDistributionChartProps {
 const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({ statusData }) => {
   // Colors for status chart
   const statusColors: Record<ApplicationStatus, string> = {
+    'Shortlisted': '#14B8A6',
     'Applied': '#3B82F6',
     'Replied': '#8B5CF6',
     'Phone Screen': '#F59E0B',

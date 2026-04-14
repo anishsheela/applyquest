@@ -78,6 +78,7 @@ const transformNetworkContact = (data: any): NetworkContact => ({
     lastContactDate: data.last_contact_date,
     notes: data.notes,
     applicationId: data.application_id,
+    createdAt: data.created_at,
 });
 
 // Helper to transform camelCase to snake_case for sending data
@@ -163,6 +164,17 @@ export const networkService = {
     },
 };
 
+
+export const shareService = {
+    getData: async (password: string): Promise<{ user: User; applications: any[]; contacts: any[] }> => {
+        const response = await apiClient.post('/share/data', { password });
+        return {
+            user: transformUser(response.data.user),
+            applications: response.data.applications.map(transformApplication),
+            contacts: response.data.contacts.map(transformNetworkContact),
+        };
+    },
+};
 
 // Unified API export
 export const api = {

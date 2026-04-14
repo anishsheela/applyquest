@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { JobApplication, ApplicationStatus, GermanLevel } from '../../types';
+import { useAppContext } from '../../context/AppContext';
 import {
   Search,
   ArrowUpDown,
@@ -31,6 +32,7 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
   onDelete,
   onStatusUpdate
 }) => {
+  const { isMentorView } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | 'all'>('all');
   const [locationFilter, setLocationFilter] = useState<string>('all');
@@ -235,7 +237,7 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
       </div>
 
       {/* Bulk Actions */}
-      {selectedApps.size > 0 && (
+      {selectedApps.size > 0 && !isMentorView && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <span className="text-sm text-blue-800 font-medium">
@@ -325,9 +327,11 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
                     Priority {getSortIcon('priorityStars')}
                   </div>
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
+                {!isMentorView && (
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -394,33 +398,35 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
                       ))}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex items-center justify-end gap-2">
-                      {app.jobUrl && (
+                  {!isMentorView && (
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex items-center justify-end gap-2">
+                        {app.jobUrl && (
+                          <button
+                            onClick={() => window.open(app.jobUrl, '_blank')}
+                            className="text-blue-600 hover:text-blue-900 p-1"
+                            title="View job posting"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
-                          onClick={() => window.open(app.jobUrl, '_blank')}
-                          className="text-blue-600 hover:text-blue-900 p-1"
-                          title="View job posting"
+                          onClick={() => onEdit(app)}
+                          className="text-gray-600 hover:text-blue-900 p-1"
+                          title="Edit application"
                         >
-                          <ExternalLink className="w-4 h-4" />
+                          <Edit className="w-4 h-4" />
                         </button>
-                      )}
-                      <button
-                        onClick={() => onEdit(app)}
-                        className="text-gray-600 hover:text-blue-900 p-1"
-                        title="Edit application"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => onDelete(app.id)}
-                        className="text-gray-600 hover:text-red-900 p-1"
-                        title="Delete application"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
+                        <button
+                          onClick={() => onDelete(app.id)}
+                          className="text-gray-600 hover:text-red-900 p-1"
+                          title="Delete application"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

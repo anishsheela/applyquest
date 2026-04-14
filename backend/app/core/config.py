@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
     SQLALCHEMY_DATABASE_URI: str | None = None
+    SHARE_PASSWORD: str = "mentor2024"
 
     class Config:
         env_file = ".env"

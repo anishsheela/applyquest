@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { User, JobApplication, NetworkContact, DailyGoal } from '../types';
-import { userService, applicationService, networkService } from '../services/api';
+import { userService, applicationService, networkService, shareService } from '../services/api';
 
 interface AppContextType {
   user: User | null;
@@ -13,7 +13,9 @@ interface AppContextType {
   setDailyGoals: (goals: DailyGoal[]) => void;
   loading: boolean;
   isAuthenticated: boolean;
+  isMentorView: boolean;
   login: (token: string) => Promise<void>;
+  mentorLogin: (password: string) => Promise<void>;
   logout: () => void;
   refreshData: () => Promise<void>;
 }
@@ -27,10 +29,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [dailyGoals, setDailyGoals] = useState<DailyGoal[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!localStorage.getItem('token'));
+  const [isMentorView, setIsMentorView] = useState<boolean>(false);
 
   const logout = useCallback(() => {
     localStorage.removeItem('token');
     setIsAuthenticated(false);
+    setIsMentorView(false);
     setUser(null);
     setApplications([]);
     setContacts([]);
@@ -64,6 +68,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     await fetchData();
   };
 
+  const mentorLogin = async (password: string) => {
+    setLoading(true);
+    try {
+      const data = await shareService.getData(password);
+      setUser(data.user);
+      setApplications(data.applications);
+      setContacts(data.contacts);
+      setIsMentorView(true);
+      setIsAuthenticated(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchData();
@@ -85,7 +103,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setDailyGoals,
         loading,
         isAuthenticated,
+        isMentorView,
         login,
+        mentorLogin,
         logout,
         refreshData: fetchData,
       }}

@@ -11,7 +11,7 @@ class ApplicationBase(BaseModel):
     job_url: Optional[str] = None
     salary_range: Optional[str] = None
     tech_stack: Optional[str] = None
-    status: ApplicationStatus = ApplicationStatus.APPLIED
+    status: ApplicationStatus = ApplicationStatus.SHORTLISTED
     visa_sponsorship: bool = False
     german_requirement: GermanLevel = GermanLevel.NONE
     relocation_support: bool = False

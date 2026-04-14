@@ -7,6 +7,7 @@ import enum
 from app.db.base_class import Base
 
 class ApplicationStatus(str, enum.Enum):
+    SHORTLISTED = "Shortlisted"
     APPLIED = "Applied"
     REPLIED = "Replied"
     PHONE_SCREEN = "Phone Screen"
@@ -31,7 +32,7 @@ class Application(Base):
     job_url = Column(String, nullable=True)
     salary_range = Column(String, nullable=True)
     tech_stack = Column(String, nullable=True)
-    status = Column(Enum(ApplicationStatus), default=ApplicationStatus.APPLIED, nullable=False)
+    status = Column(Enum(ApplicationStatus), default=ApplicationStatus.SHORTLISTED, nullable=False)
     visa_sponsorship = Column(Boolean, default=False)
     german_requirement = Column(Enum(GermanLevel), default=GermanLevel.NONE)
     relocation_support = Column(Boolean, default=False)

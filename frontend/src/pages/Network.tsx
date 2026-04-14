@@ -6,12 +6,13 @@ import NetworkList from '../components/network/NetworkList';
 import { useAppContext } from '../context/AppContext';
 
 const Network: React.FC = () => {
-  const { contacts, setContacts, applications, loading } = useAppContext();
+  const { contacts, setContacts, applications, loading, refreshData } = useAppContext();
 
   const handleAddContact = async (contactData: Omit<NetworkContact, 'id' | 'userId' | 'createdAt'>) => {
     try {
       const newContact = await networkService.create(contactData);
       setContacts(prev => [...prev, newContact]);
+      refreshData();
       toast.success(`Contact added! 🤝\n${contactData.name}`);
     } catch (error) {
       console.error("Failed to create contact:", error);

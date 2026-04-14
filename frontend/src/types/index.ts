@@ -46,6 +46,7 @@ export interface ApplicationHistory {
 }
 
 export type ApplicationStatus =
+  | 'Shortlisted'
   | 'Applied'
   | 'Replied'
   | 'Phone Screen'
@@ -79,6 +80,7 @@ export interface NetworkContact {
   lastContactDate?: string;
   notes?: string;
   applicationId?: string;
+  createdAt?: string;
 }
 
 export interface DailyGoal {

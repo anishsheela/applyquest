@@ -1,6 +1,7 @@
 import React from 'react';
 import { NetworkContact } from '../../types';
 import { Mail, Building, User, Calendar, Star, Edit2, Trash2 } from 'lucide-react';
+import { useAppContext } from '../../context/AppContext';
 
 interface NetworkContactCardProps {
   contact: NetworkContact;
@@ -9,6 +10,7 @@ interface NetworkContactCardProps {
 }
 
 const NetworkContactCard: React.FC<NetworkContactCardProps> = ({ contact, onEdit, onDelete }) => {
+  const { isMentorView } = useAppContext();
   const getConnectionStrengthColor = (strength: number) => {
     if (strength >= 4) return 'text-green-500';
     if (strength >= 3) return 'text-yellow-500';
@@ -47,22 +49,24 @@ const NetworkContactCard: React.FC<NetworkContactCardProps> = ({ contact, onEdit
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => onEdit(contact)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Edit contact"
-            >
-              <Edit2 className="w-4 h-4 text-gray-600" />
-            </button>
-            <button
-              onClick={() => onDelete(contact.id)}
-              className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-              title="Delete contact"
-            >
-              <Trash2 className="w-4 h-4 text-red-500" />
-            </button>
-          </div>
+          {!isMentorView && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onEdit(contact)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Edit contact"
+              >
+                <Edit2 className="w-4 h-4 text-gray-600" />
+              </button>
+              <button
+                onClick={() => onDelete(contact.id)}
+                className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                title="Delete contact"
+              >
+                <Trash2 className="w-4 h-4 text-red-500" />
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="space-y-3">

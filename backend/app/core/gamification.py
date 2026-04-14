@@ -50,12 +50,12 @@ def add_points(
     now = datetime.utcnow()
     today = now.date()
     
-    if not user.updated_at:
+    if not user.updated_at or user.current_streak == 0:
         user.current_streak = 1
-        user.longest_streak = 1
+        user.longest_streak = max(1, user.longest_streak)
     else:
         last_active_date = user.updated_at.date()
-        
+
         if last_active_date == today:
             # Already active today, streak unchanged
             pass

@@ -7,7 +7,7 @@ import ExperienceLevels from '../components/gamification/ExperienceLevels';
 import { Trophy, TrendingUp, Target, Award } from 'lucide-react';
 
 const Profile: React.FC = () => {
-  const { user, setUser, applications, contacts, loading } = useAppContext();
+  const { user, setUser, applications, contacts, loading, isMentorView } = useAppContext();
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<User>>({});
 
@@ -72,7 +72,7 @@ const Profile: React.FC = () => {
             <h1 className="text-3xl font-bold text-gray-800 mb-2">My Profile</h1>
             <p className="text-gray-600">Manage your account and track your progress</p>
           </div>
-          {!isEditing && (
+          {!isEditing && !isMentorView && (
             <button
               onClick={handleEditProfile}
               className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors font-medium"

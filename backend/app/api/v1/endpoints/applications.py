@@ -139,6 +139,7 @@ def update_application_status(
     # Define allowed transitions
     # Map current_status -> allowed_next_statuses
     valid_transitions = {
+        ApplicationStatus.SHORTLISTED: [ApplicationStatus.APPLIED, ApplicationStatus.REJECTED],
         ApplicationStatus.APPLIED: [ApplicationStatus.REPLIED, ApplicationStatus.REJECTED, ApplicationStatus.GHOSTED],
         ApplicationStatus.REPLIED: [ApplicationStatus.PHONE_SCREEN, ApplicationStatus.REJECTED, ApplicationStatus.GHOSTED],
         ApplicationStatus.PHONE_SCREEN: [ApplicationStatus.TECHNICAL_ROUND_1, ApplicationStatus.REJECTED, ApplicationStatus.GHOSTED],
