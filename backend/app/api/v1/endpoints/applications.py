@@ -53,14 +53,8 @@ def create_application(
     db.commit()
     db.refresh(application)
     
-    # Record initial history
-    history = application_model.ApplicationHistory(
-        application_id=application.id,
-        new_status=application.status,
-        notes="Initial application creation"
-    )
-    db.add(history)
     db.commit()
+    db.refresh(application)
     
     return application
 
