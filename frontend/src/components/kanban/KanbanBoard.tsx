@@ -52,7 +52,13 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
   };
 
   const getApplicationsByStage = (stageId: string) => {
-    return applications.filter(app => app.status === stageId);
+    return applications
+      .filter(app => app.status === stageId)
+      .sort((a, b) => {
+        const dateDiff = new Date(b.appliedDate).getTime() - new Date(a.appliedDate).getTime();
+        if (dateDiff !== 0) return dateDiff;
+        return b.priorityStars - a.priorityStars;
+      });
   };
 
   const formatDate = (dateString: string) => {
