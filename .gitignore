@@ -15,3 +15,8 @@ __pycache__
 .idea
 .env.deploy
 db_data/
+
+# Deployment scripts and configs
+deploy.sh
+shell.nix
+scripts/
