@@ -20,3 +20,4 @@ db_data/
 deploy.sh
 shell.nix
 scripts/
+.github/
