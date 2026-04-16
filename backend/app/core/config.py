@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
     SQLALCHEMY_DATABASE_URI: str | None = None
-    SHARE_PASSWORD: str = "mentor2024"
+    SHARE_PASSWORD: str = "Mq7#vX2$pL9nR4wZ"
 
     class Config:
         env_file = ".env"
