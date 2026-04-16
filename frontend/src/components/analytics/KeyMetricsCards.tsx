@@ -4,7 +4,7 @@ import {
   TrendingUp,
   Users,
   Target,
-  Award,
+  Zap,
   Clock
 } from 'lucide-react';
 
@@ -12,7 +12,8 @@ interface MetricsData {
   total: number;
   responseRate: number;
   interviewRate: number;
-  offerRate: number;
+  easyApplied: number;
+  easyApplyRate: number;
   rejected: number;
   ghosted: number;
 }
@@ -62,12 +63,14 @@ const KeyMetricsCards: React.FC<KeyMetricsCardsProps> = ({ metrics }) => {
 
       <div className="bg-white rounded-xl p-4 shadow-md">
         <div className="flex items-center gap-3">
-          <div className="bg-purple-100 rounded-full p-2">
-            <Award className="w-5 h-5 text-purple-600" />
+          <div className="bg-green-100 rounded-full p-2">
+            <Zap className="w-5 h-5 text-green-600" />
           </div>
           <div>
-            <div className="text-2xl font-bold text-purple-600">{metrics.offerRate}%</div>
-            <div className="text-xs text-purple-800">Offer Rate</div>
+            <div className="text-2xl font-bold text-green-600">
+              {metrics.easyApplied} <span className="text-base font-medium text-green-500">({metrics.easyApplyRate}%)</span>
+            </div>
+            <div className="text-xs text-green-800">Easy Applied</div>
           </div>
         </div>
       </div>

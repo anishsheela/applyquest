@@ -143,8 +143,8 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                               </span>
                             )}
                             {app.easyApply && (
-                              <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800" title="Applied via Easy Apply">
-                                Easy
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-700 border border-green-200" title="Applied via Easy Apply">
+                                ⚡ Easy Apply
                               </span>
                             )}
                           </div>

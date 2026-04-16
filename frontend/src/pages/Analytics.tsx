@@ -50,20 +50,20 @@ const Analytics: React.FC = () => {
     const interviewed = filteredApplications.filter(app =>
       ['Phone Screen', 'Technical Round 1', 'Technical Round 2', 'Final Round'].includes(app.status)
     ).length;
-    const offers = filteredApplications.filter(app => app.status === 'Offer').length;
     const rejected = filteredApplications.filter(app => app.status === 'Rejected').length;
     const ghosted = filteredApplications.filter(app => app.status === 'Ghosted').length;
+    const easyApplied = filteredApplications.filter(app => app.easyApply).length;
 
     return {
       total,
       responded,
       interviewed,
-      offers,
       rejected,
       ghosted,
+      easyApplied,
       responseRate: total > 0 ? Math.round((responded / total) * 100) : 0,
       interviewRate: total > 0 ? Math.round((interviewed / total) * 100) : 0,
-      offerRate: total > 0 ? Math.round((offers / total) * 100) : 0,
+      easyApplyRate: total > 0 ? Math.round((easyApplied / total) * 100) : 0,
     };
   }, [filteredApplications]);
 
