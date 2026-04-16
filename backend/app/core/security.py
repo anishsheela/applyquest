@@ -1,10 +1,11 @@
+import os
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from typing import Optional, Any, Union
 from jose import jwt
 
 # Security Config
-SECRET_KEY = "CHANGE_THIS_IN_PRODUCTION_TO_A_STRONG_SECRET_KEY"
+SECRET_KEY = os.environ.get("SECRET_KEY", "CHANGE_THIS_IN_PRODUCTION_TO_A_STRONG_SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 1 week
 
