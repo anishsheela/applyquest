@@ -13,6 +13,7 @@ interface ApplicationFormData {
   visaSponsorship: boolean;
   germanRequirement: string;
   relocationSupport: boolean;
+  easyApply: boolean;
   jobBoardSource: string;
   priorityStars: number;
   notes: string;
@@ -41,6 +42,7 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
     visaSponsorship: initialData?.visaSponsorship || false,
     germanRequirement: initialData?.germanRequirement || 'None',
     relocationSupport: initialData?.relocationSupport || false,
+    easyApply: initialData?.easyApply || false,
     jobBoardSource: initialData?.jobBoardSource || '',
     priorityStars: initialData?.priorityStars || 3,
     notes: initialData?.notes || '',
@@ -218,6 +220,20 @@ const AddApplicationForm: React.FC<AddApplicationFormProps> = ({
                         <option key={board} value={board}>{board}</option>
                       ))}
                     </select>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
+                  <input
+                    type="checkbox"
+                    name="easyApply"
+                    checked={formData.easyApply}
+                    onChange={handleChange}
+                    className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                  />
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 cursor-pointer">Easy Apply</label>
+                    <p className="text-xs text-gray-500">Applied via LinkedIn or similar with standard resume, minimal effort</p>
                   </div>
                 </div>
 

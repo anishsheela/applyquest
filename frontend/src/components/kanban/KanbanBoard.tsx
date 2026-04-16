@@ -142,6 +142,11 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                                 <Users className="w-3 h-3" />
                               </span>
                             )}
+                            {app.easyApply && (
+                              <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800" title="Applied via Easy Apply">
+                                Easy
+                              </span>
+                            )}
                           </div>
                           <p className="text-sm text-gray-600">{app.positionTitle}</p>
                         </div>

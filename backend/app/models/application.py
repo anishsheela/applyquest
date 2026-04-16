@@ -36,6 +36,7 @@ class Application(Base):
     visa_sponsorship = Column(Boolean, default=False)
     german_requirement = Column(Enum(GermanLevel), default=GermanLevel.NONE)
     relocation_support = Column(Boolean, default=False)
+    easy_apply = Column(Boolean, default=False)
     job_board_source = Column(String, nullable=True)
     priority_stars = Column(Integer, default=0)
     notes = Column(Text, nullable=True)

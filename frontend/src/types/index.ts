@@ -26,6 +26,7 @@ export interface JobApplication {
   visaSponsorship: boolean;
   germanRequirement: GermanLevel;
   relocationSupport: boolean;
+  easyApply: boolean;
   jobBoardSource?: string;
   priorityStars: number;
   notes?: string;

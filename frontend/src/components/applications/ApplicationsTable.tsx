@@ -38,6 +38,7 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
   const [locationFilter, setLocationFilter] = useState<string>('all');
   const [visaFilter, setVisaFilter] = useState<'all' | 'true' | 'false'>('all');
   const [germanFilter, setGermanFilter] = useState<GermanLevel | 'all'>('all');
+  const [easyApplyFilter, setEasyApplyFilter] = useState<'all' | 'true' | 'false'>('all');
   const [sortField, setSortField] = useState<SortField>('appliedDate');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [selectedApps, setSelectedApps] = useState<Set<string>>(new Set());
@@ -68,8 +69,9 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
       const matchesLocation = locationFilter === 'all' || app.location === locationFilter;
       const matchesVisa = visaFilter === 'all' || app.visaSponsorship.toString() === visaFilter;
       const matchesGerman = germanFilter === 'all' || app.germanRequirement === germanFilter;
+      const matchesEasyApply = easyApplyFilter === 'all' || app.easyApply.toString() === easyApplyFilter;
 
-      return matchesSearch && matchesStatus && matchesLocation && matchesVisa && matchesGerman;
+      return matchesSearch && matchesStatus && matchesLocation && matchesVisa && matchesGerman && matchesEasyApply;
     });
 
     // Sort
@@ -93,7 +95,7 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
     });
 
     return filtered;
-  }, [applications, searchTerm, statusFilter, locationFilter, visaFilter, germanFilter, sortField, sortDirection]);
+  }, [applications, searchTerm, statusFilter, locationFilter, visaFilter, germanFilter, easyApplyFilter, sortField, sortDirection]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -227,6 +229,16 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
               <option value="Basic">Basic</option>
               <option value="Fluent">Fluent</option>
             </select>
+
+            <select
+              value={easyApplyFilter}
+              onChange={(e) => setEasyApplyFilter(e.target.value as 'all' | 'true' | 'false')}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            >
+              <option value="all">Easy Apply</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
           </div>
         </div>
 
@@ -359,6 +371,11 @@ const ApplicationsTable: React.FC<ApplicationsTableProps> = ({
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-purple-100 text-purple-800" title="Referred by network contact">
                               <Users className="w-3 h-3" />
                               Referral
+                            </span>
+                          )}
+                          {app.easyApply && (
+                            <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800" title="Applied via Easy Apply">
+                              Easy Apply
                             </span>
                           )}
                         </div>

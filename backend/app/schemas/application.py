@@ -15,6 +15,7 @@ class ApplicationBase(BaseModel):
     visa_sponsorship: bool = False
     german_requirement: GermanLevel = GermanLevel.NONE
     relocation_support: bool = False
+    easy_apply: bool = False
     job_board_source: Optional[str] = None
     priority_stars: int = 0
     notes: Optional[str] = None
@@ -34,6 +35,7 @@ class ApplicationUpdate(BaseModel):
     visa_sponsorship: Optional[bool] = None
     german_requirement: Optional[GermanLevel] = None
     relocation_support: Optional[bool] = None
+    easy_apply: Optional[bool] = None
     job_board_source: Optional[str] = None
     priority_stars: Optional[int] = None
     notes: Optional[str] = None
