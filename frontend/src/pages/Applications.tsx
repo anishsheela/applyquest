@@ -142,7 +142,7 @@ const Applications: React.FC = () => {
     interviews: applications.filter(app =>
       ['Phone Screen', 'Technical Round 1', 'Technical Round 2', 'Final Round'].includes(app.status)
     ).length,
-    offers: applications.filter(app => app.status === 'Offer').length
+    easyApplied: applications.filter(app => app.easyApply).length
   };
 
   if (loading) {
@@ -205,11 +205,11 @@ const Applications: React.FC = () => {
           <div className="bg-green-50 rounded-lg p-4">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center">
-                <span className="text-white font-bold text-sm">{stats.offers}</span>
+                <span className="text-white font-bold text-sm">{stats.easyApplied}</span>
               </div>
               <div>
-                <div className="text-2xl font-bold text-green-600">{stats.offers}</div>
-                <div className="text-sm text-green-800">Offers</div>
+                <div className="text-2xl font-bold text-green-600">{stats.easyApplied}</div>
+                <div className="text-sm text-green-800">Easy Applied</div>
               </div>
             </div>
           </div>
