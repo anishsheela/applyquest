@@ -13,3 +13,5 @@ __pycache__
 
 # Other
 .idea
+.env.deploy
+db_data/
