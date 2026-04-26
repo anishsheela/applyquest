@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.models.user import User
 from app.models.point_history import PointHistory
 from sqlalchemy.orm import Session
@@ -47,7 +47,7 @@ def add_points(
             user.level_name = level_data["name"]
     
     # Update Streak
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     today = now.date()
     
     if not user.updated_at or user.current_streak == 0:

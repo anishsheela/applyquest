@@ -2,7 +2,7 @@ from sqlalchemy import Column, String, Integer, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from app.db.base_class import Base
 
 class User(Base):
@@ -18,8 +18,8 @@ class User(Base):
     level_name = Column(String, default='Novice')
     current_streak = Column(Integer, default=0)
     longest_streak = Column(Integer, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), onupdate=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 
     applications = relationship("Application", back_populates="user")
     network_contacts = relationship("NetworkContact", back_populates="user")

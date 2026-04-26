@@ -2,7 +2,7 @@ from sqlalchemy import Column, String, Integer, DateTime, Boolean, Enum, Text, F
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
-from datetime import datetime
+from datetime import datetime, date, timezone
 import enum
 from app.db.base_class import Base
 
@@ -40,9 +40,9 @@ class Application(Base):
     job_board_source = Column(String, nullable=True)
     priority_stars = Column(Integer, default=0)
     notes = Column(Text, nullable=True)
-    applied_date = Column(Date, default=datetime.utcnow().date)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    applied_date = Column(Date, default=date.today)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), onupdate=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     referral_contact_id = Column(UUID(as_uuid=True), ForeignKey("networkcontact.id", ondelete="SET NULL"), nullable=True)
 
     user = relationship("User", back_populates="applications")
@@ -55,7 +55,7 @@ class ApplicationHistory(Base):
     application_id = Column(UUID(as_uuid=True), ForeignKey("application.id"), nullable=False)
     old_status = Column(Enum(ApplicationStatus), nullable=True)
     new_status = Column(Enum(ApplicationStatus), nullable=False)
-    changed_at = Column(DateTime, default=datetime.utcnow)
+    changed_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     notes = Column(Text, nullable=True)
 
     application = relationship("Application", back_populates="history")

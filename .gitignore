@@ -10,6 +10,7 @@ frontend/.env
 #Backend
 *.pyc
 __pycache__
+.venv/
 
 # Other
 .idea
