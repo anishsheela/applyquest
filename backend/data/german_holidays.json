@@ -1,0 +1,22 @@
+[
+  { "date": "2026-01-01", "name": "New Year's Day", "enabled": true },
+  { "date": "2026-01-06", "name": "Epiphany (BY/BW/ST only)", "enabled": true },
+  { "date": "2026-03-08", "name": "International Women's Day (BE/MV only)", "enabled": true },
+  { "date": "2026-04-18", "name": "Good Friday", "enabled": true },
+  { "date": "2026-04-20", "name": "Easter Sunday (BB only)", "enabled": true },
+  { "date": "2026-04-21", "name": "Easter Monday", "enabled": true },
+  { "date": "2026-05-01", "name": "Labour Day", "enabled": true },
+  { "date": "2026-05-08", "name": "Liberation Day (BE only)", "enabled": false },
+  { "date": "2026-05-29", "name": "Ascension Day", "enabled": false },
+  { "date": "2026-06-08", "name": "Pentecost (BB only)", "enabled": false },
+  { "date": "2026-06-09", "name": "Whit Monday", "enabled": false },
+  { "date": "2026-06-19", "name": "Corpus Christi (regional)", "enabled": false },
+  { "date": "2026-08-15", "name": "Assumption Day (SL only)", "enabled": false },
+  { "date": "2026-09-20", "name": "World Children's Day (TH only)", "enabled": false },
+  { "date": "2026-10-03", "name": "German Unity Day", "enabled": true },
+  { "date": "2026-10-31", "name": "Reformation Day (regional)", "enabled": false },
+  { "date": "2026-11-01", "name": "All Saints' Day (regional)", "enabled": false },
+  { "date": "2026-11-19", "name": "Repentance and Prayer Day (SN only)", "enabled": false },
+  { "date": "2026-12-25", "name": "Christmas Day", "enabled": true },
+  { "date": "2026-12-26", "name": "St. Stephen's Day", "enabled": false }
+]

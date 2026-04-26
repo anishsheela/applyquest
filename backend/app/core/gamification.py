@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from app.models.user import User
 from app.models.point_history import PointHistory
+from app.core.working_days import load_off_days, streak_is_unbroken
 from sqlalchemy.orm import Session
 from uuid import UUID
 
@@ -56,14 +57,12 @@ def add_points(
     else:
         last_active_date = user.updated_at.date()
 
+        off_days = load_off_days()
         if last_active_date == today:
-            # Already active today, streak unchanged
-            pass
-        elif last_active_date == today - timedelta(days=1):
-            # Active yesterday, streak continues
+            pass  # Already active today, streak unchanged
+        elif streak_is_unbroken(last_active_date, today, off_days):
             user.current_streak += 1
         else:
-            # Broken streak - reset to 1
             user.current_streak = 1
             
         # Update longest streak
