@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, DateTime
+from sqlalchemy import Column, String, Integer, DateTime, Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
@@ -18,6 +18,7 @@ class User(Base):
     level_name = Column(String, default='Novice')
     current_streak = Column(Integer, default=0)
     longest_streak = Column(Integer, default=0)
+    last_goal_bonus_date = Column(Date, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), onupdate=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
 

@@ -1,7 +1,9 @@
-import React, { useMemo } from 'react';
-import { Flame, Target, TrendingUp, Briefcase, Users, CheckCircle } from 'lucide-react';
+import React, { useMemo, useEffect, useRef } from 'react';
+import { Flame, Target, TrendingUp, Briefcase, Users, CheckCircle, Star, DollarSign, Zap, FileText, Bookmark } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
+import { JobApplication, NetworkContact } from '../../types';
+import { userService } from '../../services/api';
 
 const motivationalMessages = [
   "Every application is a step closer to your dream job! 🚀",
@@ -11,37 +13,127 @@ const motivationalMessages = [
   "The right opportunity is out there waiting for you! 🎯"
 ];
 
+const toLocalDate = (iso: string) => {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+const getTodayStr = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+};
+
+function mulberry32(seed: number) {
+  return () => {
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function seededShuffle<T>(arr: T[], seed: number): T[] {
+  const rand = mulberry32(seed);
+  const result = [...arr];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function dateToSeed(dateStr: string): number {
+  return dateStr.split('').reduce((acc, ch, i) => acc + ch.charCodeAt(0) * (i + 1), 0);
+}
+
+type GoalDef = {
+  id: number;
+  label: string;
+  icon: React.ElementType;
+  target: number;
+  measure: (apps: JobApplication[], contacts: NetworkContact[], today: string) => number;
+};
+
+const GOAL_POOL: GoalDef[] = [
+  {
+    id: 1,
+    label: "Apply to 3 jobs",
+    icon: Briefcase,
+    target: 3,
+    measure: (apps, _, today) => apps.filter(a => toLocalDate(a.createdAt) === today).length,
+  },
+  {
+    id: 2,
+    label: "Add 2 networking contacts",
+    icon: Users,
+    target: 2,
+    measure: (_, contacts, today) =>
+      contacts.filter(c => c.createdAt && toLocalDate(c.createdAt) === today).length,
+  },
+  {
+    id: 3,
+    label: "Update an application status",
+    icon: Target,
+    target: 1,
+    measure: (apps, _, today) =>
+      apps.filter(a => toLocalDate(a.updatedAt) === today && toLocalDate(a.createdAt) !== today).length,
+  },
+  {
+    id: 4,
+    label: "Add 2 applications with notes",
+    icon: FileText,
+    target: 2,
+    measure: (apps, _, today) =>
+      apps.filter(a => toLocalDate(a.createdAt) === today && !!a.notes?.trim()).length,
+  },
+  {
+    id: 5,
+    label: "Apply to 3 easy-apply jobs",
+    icon: Zap,
+    target: 3,
+    measure: (apps, _, today) =>
+      apps.filter(a => toLocalDate(a.createdAt) === today && a.easyApply).length,
+  },
+  {
+    id: 6,
+    label: "Add 2 high-priority applications",
+    icon: Star,
+    target: 2,
+    measure: (apps, _, today) =>
+      apps.filter(a => toLocalDate(a.createdAt) === today && a.priorityStars >= 4).length,
+  },
+  {
+    id: 7,
+    label: "Add 2 applications with salary info",
+    icon: DollarSign,
+    target: 2,
+    measure: (apps, _, today) =>
+      apps.filter(a => toLocalDate(a.createdAt) === today && !!a.salaryRange?.trim()).length,
+  },
+  {
+    id: 8,
+    label: "Shortlist 2 opportunities",
+    icon: Bookmark,
+    target: 2,
+    measure: (apps, _, today) =>
+      apps.filter(a => toLocalDate(a.createdAt) === today && a.status === 'Shortlisted').length,
+  },
+];
+
 const ApplyQuestDashboard: React.FC = () => {
-  const { user, applications, contacts, loading } = useAppContext();
+  const { user, setUser, applications, contacts, loading } = useAppContext();
   const navigate = useNavigate();
+  const bonusClaimedRef = useRef(false);
 
-  // Calculate Daily Goals Progress based on real data
-  const goalsProgress = useMemo(() => {
-    if (!applications || !contacts) return { applied: 0, contacts: 0 };
-
-    const today = new Date().toISOString().split('T')[0];
-
-    // Count applications created today
-    const appliedToday = applications.filter(app => {
-      const appDate = new Date(app.createdAt).toISOString().split('T')[0];
-      return appDate === today;
-    }).length;
-
-    // Count contacts added today
-    const contactsToday = contacts.filter(contact => {
-      if (!contact.createdAt) return false;
-      return new Date(contact.createdAt).toISOString().split('T')[0] === today;
-    }).length;
-
-    return { applied: appliedToday, contacts: contactsToday };
+  const dailyGoals = useMemo(() => {
+    const today = getTodayStr();
+    const seed = dateToSeed(today);
+    const shuffled = seededShuffle(GOAL_POOL, seed);
+    return shuffled.slice(0, 3).map(goal => ({
+      ...goal,
+      current: goal.measure(applications, contacts, today),
+    }));
   }, [applications, contacts]);
-
-  // Define Goals with real progress
-  const dailyGoals = [
-    { id: 1, type: "Apply to jobs", target: 3, current: goalsProgress.applied, icon: Briefcase },
-    { id: 2, type: "Add networking contacts", target: 2, current: goalsProgress.contacts, icon: Users },
-    { id: 3, type: "Total Applications", target: Math.max(10, applications.length + 1), current: applications.length, icon: Target }
-  ];
 
   // Calculate Quick Stats
   const quickStats = useMemo(() => {
@@ -83,6 +175,15 @@ const ApplyQuestDashboard: React.FC = () => {
     const pointsNeededForLevel = nextLevelPoints - currentLevelBase;
     return Math.min(Math.max((pointsInCurrentLevel / pointsNeededForLevel) * 100, 0), 100);
   };
+
+  const allGoalsComplete = dailyGoals.every(g => g.current >= g.target);
+
+  useEffect(() => {
+    if (allGoalsComplete && !bonusClaimedRef.current) {
+      bonusClaimedRef.current = true;
+      userService.claimDailyGoalBonus().then(setUser).catch(() => {});
+    }
+  }, [allGoalsComplete, setUser]);
 
   return (
     <div>
@@ -177,11 +278,16 @@ const ApplyQuestDashboard: React.FC = () => {
       </div>
 
       {/* Today's Goals */}
-      <div className="bg-white rounded-xl p-6 shadow-md mb-6">
+      <div className={`bg-white rounded-xl p-6 shadow-md mb-6 ${allGoalsComplete ? 'border-2 border-green-400' : ''}`}>
         <div className="flex items-center gap-2 mb-4">
           <Target className="w-6 h-6 text-purple-600" />
           <h2 className="text-2xl font-bold text-gray-800">Today's Goals</h2>
         </div>
+        {allGoalsComplete && (
+          <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 mb-4 text-center">
+            <span className="text-green-700 font-semibold">All goals complete! Great work today.</span>
+          </div>
+        )}
         <div className="space-y-4">
           {dailyGoals.map((goal) => {
             const GoalIcon = goal.icon;
@@ -199,18 +305,17 @@ const ApplyQuestDashboard: React.FC = () => {
                         <GoalIcon className="w-5 h-5 text-gray-600" />
                       )}
                     </div>
-                    <span className="font-medium text-gray-800">{goal.type}</span>
+                    <span className="font-medium text-gray-800">{goal.label}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">
-                      {goal.current}/{goal.target}
+                    <span className={`text-sm font-semibold ${isComplete ? 'text-green-600' : 'text-gray-600'}`}>
+                      {goal.current}/{goal.target}{isComplete ? ' ✓' : ''}
                     </span>
                   </div>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
-                    className={`h-2 rounded-full transition-all duration-500 ${isComplete ? 'bg-green-500' : 'bg-purple-500'
-                      }`}
+                    className={`h-2 rounded-full transition-all duration-500 ${isComplete ? 'bg-green-500' : 'bg-purple-500'}`}
                     style={{ width: `${Math.min(progress, 100)}%` }}
                   ></div>
                 </div>

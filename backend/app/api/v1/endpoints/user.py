@@ -1,9 +1,11 @@
 from typing import Any
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.api import deps
 from app.models import user as user_model
 from app.schemas import user as user_schema
+from app.core.gamification import add_points
 
 router = APIRouter()
 
@@ -37,3 +39,23 @@ def update_user(
     db.commit()
     db.refresh(user)
     return user
+
+
+@router.post("/daily-goal-bonus", response_model=user_schema.User)
+def claim_daily_goal_bonus(
+    *,
+    db: Session = Depends(deps.get_db),
+    current_user: user_model.User = Depends(deps.get_current_user),
+) -> Any:
+    """
+    Award 25 bonus points for completing all daily goals. Idempotent — only awards once per calendar day.
+    """
+    today = datetime.now(timezone.utc).date()
+    if current_user.last_goal_bonus_date == today:
+        return current_user
+
+    add_points(db, current_user, 25, "Daily goal bonus")
+    current_user.last_goal_bonus_date = today
+    db.commit()
+    db.refresh(current_user)
+    return current_user
