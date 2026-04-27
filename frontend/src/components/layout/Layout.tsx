@@ -1,7 +1,8 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Briefcase, BarChart3, Users, User, LogOut, Eye } from 'lucide-react';
+import { LayoutDashboard, Briefcase, BarChart3, Users, User, LogOut, Eye, Bell } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
+import { classifyApp } from '../../utils/followup';
 
 interface LayoutProps {
   children: ReactNode;
@@ -10,14 +11,22 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout, isMentorView } = useAppContext();
+  const { user, logout, isMentorView, applications } = useAppContext();
+
+  const followupBadge = useMemo(() => {
+    return applications.filter(a => {
+      const c = classifyApp(a);
+      return c === 'needs_followup' || c === 'needs_decision';
+    }).length;
+  }, [applications]);
 
   const navItems = [
-    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/applications', icon: Briefcase, label: 'Applications' },
-    { path: '/analytics', icon: BarChart3, label: 'Analytics' },
-    { path: '/network', icon: Users, label: 'Network' },
-    { path: '/profile', icon: User, label: 'Profile' },
+    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', badge: 0 },
+    { path: '/applications', icon: Briefcase, label: 'Applications', badge: 0 },
+    { path: '/analytics', icon: BarChart3, label: 'Analytics', badge: 0 },
+    { path: '/followup', icon: Bell, label: 'Followup', badge: followupBadge },
+    { path: '/network', icon: Users, label: 'Network', badge: 0 },
+    { path: '/profile', icon: User, label: 'Profile', badge: 0 },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -44,13 +53,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <button
                     key={item.path}
                     onClick={() => navigate(item.path)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${isActive(item.path)
+                    className={`relative flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${isActive(item.path)
                       ? 'bg-blue-500 text-white shadow-md'
                       : 'text-gray-600 hover:bg-gray-100'
                       }`}
                   >
                     <Icon className="w-5 h-5" />
                     <span className="font-medium">{item.label}</span>
+                    {item.badge > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                        {item.badge > 9 ? '9+' : item.badge}
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -91,13 +105,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <button
                   key={item.path}
                   onClick={() => navigate(item.path)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all ${isActive(item.path)
+                  className={`relative flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all ${isActive(item.path)
                     ? 'bg-blue-500 text-white shadow-md'
                     : 'text-gray-600 bg-gray-100'
                     }`}
                 >
                   <Icon className="w-4 h-4" />
                   <span className="text-sm font-medium">{item.label}</span>
+                  {item.badge > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                      {item.badge > 9 ? '9+' : item.badge}
+                    </span>
+                  )}
                 </button>
               );
             })}

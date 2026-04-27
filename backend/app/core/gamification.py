@@ -42,10 +42,15 @@ def add_points(
     db.refresh(user)
     
     # Calculate Level based on total points
+    old_level = user.level
     for level_data in LEVELS:
         if user.points >= level_data["minPoints"]:
             user.level = level_data["level"]
             user.level_name = level_data["name"]
+
+    if user.level > old_level:
+        from app.core.email import notify_level_up
+        notify_level_up(user.name, user.level, user.level_name, user.points)
     
     # Update Streak
     now = datetime.now(timezone.utc)

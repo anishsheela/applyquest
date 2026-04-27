@@ -11,4 +11,7 @@ Faker
 passlib[bcrypt]
 python-jose[cryptography]
 bcrypt==4.0.1
+resend
+APScheduler>=3.10,<4
+pytz
 

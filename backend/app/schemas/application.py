@@ -20,6 +20,7 @@ class ApplicationBase(BaseModel):
     priority_stars: int = 0
     notes: Optional[str] = None
     applied_date: date
+    followed_up_at: Optional[date] = None
     referral_contact_id: Optional[UUID] = None
 
 class ApplicationCreate(ApplicationBase):
@@ -40,6 +41,7 @@ class ApplicationUpdate(BaseModel):
     priority_stars: Optional[int] = None
     notes: Optional[str] = None
     applied_date: Optional[date] = None
+    followed_up_at: Optional[date] = None
     referral_contact_id: Optional[UUID] = None
 
 class ApplicationHistoryBase(BaseModel):

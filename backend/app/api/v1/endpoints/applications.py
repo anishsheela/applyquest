@@ -1,4 +1,5 @@
 from typing import Any, List
+from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from app.api import deps
@@ -52,10 +53,14 @@ def create_application(
     
     db.commit()
     db.refresh(application)
-    
-    db.commit()
-    db.refresh(application)
-    
+
+    total_count = db.query(application_model.Application).filter(
+        application_model.Application.user_id == current_user.id
+    ).count()
+    if total_count in {10, 25, 50, 100}:
+        from app.core.email import notify_milestone
+        notify_milestone(current_user.name, total_count)
+
     return application
 
 @router.get("/{id}", response_model=application_schema.Application)
@@ -160,8 +165,9 @@ def update_application_status(
             detail=f"Invalid status transition from {current_status} to {new_status}"
         )
 
-    # Perform update
+    # Perform update — clear any pending followup since status is advancing
     application.status = new_status
+    application.followed_up_at = None
     db.add(application)
     
     # Record history
@@ -175,7 +181,56 @@ def update_application_status(
     
     db.commit()
     db.refresh(application)
+
+    interview_statuses = {
+        ApplicationStatus.PHONE_SCREEN,
+        ApplicationStatus.TECHNICAL_ROUND_1,
+        ApplicationStatus.TECHNICAL_ROUND_2,
+        ApplicationStatus.FINAL_ROUND,
+    }
+    if new_status in interview_statuses:
+        from app.core.email import notify_interview
+        notify_interview(current_user.name, application.company_name, application.position_title, new_status.value, notes)
+    elif new_status == ApplicationStatus.OFFER:
+        from app.core.email import notify_offer
+        notify_offer(current_user.name, application.company_name, application.position_title, application.location, application.salary_range, notes)
+
     return application
+
+@router.post("/{id}/followup", response_model=application_schema.Application)
+def mark_followed_up(
+    *,
+    db: Session = Depends(deps.get_db),
+    id: str,
+    current_user: user_model.User = Depends(deps.get_current_user),
+) -> Any:
+    """
+    Record that the user followed up on this application today.
+    """
+    application = db.query(application_model.Application).filter(
+        application_model.Application.id == id,
+        application_model.Application.user_id == current_user.id
+    ).first()
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    application.followed_up_at = date.today()
+    db.add(application)
+
+    from app.core import gamification
+    gamification.add_points(
+        db=db,
+        user=current_user,
+        points=1,
+        reason="Followed up on application",
+        reference_type="application",
+        reference_id=application.id
+    )
+
+    db.commit()
+    db.refresh(application)
+    return application
+
 
 @router.delete("/{id}", response_model=application_schema.Application)
 def delete_application(

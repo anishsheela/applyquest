@@ -10,6 +10,12 @@ class Settings(BaseSettings):
     SQLALCHEMY_DATABASE_URI: str | None = None
     SHARE_PASSWORD: str = "sharepassword"
 
+    # Email
+    RESEND_API_KEY: str = ""
+    EMAIL_FROM: str = "ApplyQuest <noreply@applyquest.app>"
+    USER_EMAIL: str = "aneesh.nl@gmail.com"
+    MENTOR_EMAILS: str = ""  # comma-separated list
+
     class Config:
         env_file = ".env"
 
