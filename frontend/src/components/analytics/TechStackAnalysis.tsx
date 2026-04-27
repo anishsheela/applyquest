@@ -70,7 +70,7 @@ const TechStackAnalysis: React.FC<TechStackAnalysisProps> = ({ applications }) =
                   <XAxis type="number" />
                   <YAxis dataKey="tech" type="category" width={80} fontSize={12} />
                   <Tooltip
-                    formatter={(value: number | undefined, name: string | undefined) => [
+                    formatter={(value, name) => [
                       name === 'count' ? `${value || 0} applications` : `${value || 0} offers`,
                       name === 'count' ? 'Applications' : 'Offers'
                     ]}

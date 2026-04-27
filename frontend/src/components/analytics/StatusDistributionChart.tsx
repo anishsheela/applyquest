@@ -55,8 +55,8 @@ const StatusDistributionChart: React.FC<StatusDistributionChartProps> = ({ statu
               ))}
             </Pie>
             <Tooltip
-              formatter={(value: number | undefined, name: string | undefined) => [
-                `${value || 0} applications (${statusData.find(d => d.name === name)?.percentage || 0}%)`,
+              formatter={(value, name) => [
+                `${Number(value) || 0} applications (${statusData.find(d => d.name === name)?.percentage || 0}%)`,
                 name || ''
               ]}
             />
