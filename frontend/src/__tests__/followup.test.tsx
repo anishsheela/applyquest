@@ -98,6 +98,8 @@ jest.mock('../context/AppContext', () => ({
   useAppContext: jest.fn(),
 }));
 
+// Single mock covering all service methods used across all describe blocks.
+// A second jest.mock for the same module would override this one due to hoisting.
 jest.mock('../services/api', () => ({
   applicationService: {
     markFollowedUp: jest.fn(),
@@ -105,6 +107,7 @@ jest.mock('../services/api', () => ({
   },
   userService: {
     getCurrentUser: jest.fn(),
+    claimDailyGoalBonus: jest.fn(),
   },
 }));
 
@@ -218,11 +221,7 @@ jest.mock('../../components/dashboard/DashboardComponent', () => {
   // keep real impl but mock navigate
 }, { virtual: true });
 
-jest.mock('../services/api', () => ({
-  ...jest.requireActual('../services/api'),
-  userService: { claimDailyGoalBonus: jest.fn() },
-  applicationService: { markFollowedUp: jest.fn(), updateStatus: jest.fn() },
-}));
+// Second jest.mock for the same module removed — see the consolidated mock above.
 
 import ApplyQuestDashboard from '../components/dashboard/DashboardComponent';
 

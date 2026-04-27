@@ -21,3 +21,6 @@ db_data/
 deploy.sh
 shell.nix
 scripts/
+
+#Backups
+*.sql
