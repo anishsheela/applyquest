@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     SQLALCHEMY_DATABASE_URI: str | None = None
     SHARE_PASSWORD: str = "sharepassword"
 
+    # Auth
+    SECRET_KEY: str = "CHANGE_THIS_IN_PRODUCTION_TO_A_STRONG_SECRET_KEY"
+
     # Email
     RESEND_API_KEY: str = ""
     EMAIL_FROM: str = "ApplyQuest <noreply@applyquest.app>"
