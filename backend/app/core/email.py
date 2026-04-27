@@ -35,7 +35,7 @@ def _send(to: list[str], subject: str, html: str) -> None:
         except Exception:
             logger.exception("Failed to send email: %s", subject)
 
-    threading.Thread(target=_do, daemon=True).start()
+    threading.Thread(target=_do).start()
 
 
 # --- Triggered notifications ---
