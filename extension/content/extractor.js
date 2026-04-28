@@ -1,19 +1,24 @@
-browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (message.type !== 'EXTRACT_JOB') return false;
+// Guard against double-registration when injected both via manifest and programmatically
+if (!window._aqExtractorLoaded) {
+  window._aqExtractorLoaded = true;
 
-  const host = window.location.hostname;
-  let data = null;
+  browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (message.type !== 'EXTRACT_JOB') return false;
 
-  if (host.includes('linkedin.com'))        data = extractLinkedIn();
-  else if (host.includes('indeed.com'))     data = extractIndeed();
-  else if (host.includes('glassdoor.com'))  data = extractGlassdoor();
-  else if (host.includes('xing.com'))       data = extractXing();
-  else if (host.includes('stepstone'))      data = extractStepStone();
+    const host = window.location.hostname;
+    let data = null;
 
-  if (data) {
-    sendResponse({ success: true, data });
-  } else {
-    sendResponse({ success: false, reason: 'not_a_job_page' });
-  }
-  return true;
-});
+    if (host.includes('linkedin.com'))        data = extractLinkedIn();
+    else if (host.includes('indeed.com'))     data = extractIndeed();
+    else if (host.includes('glassdoor.com'))  data = extractGlassdoor();
+    else if (host.includes('xing.com'))       data = extractXing();
+    else if (host.includes('stepstone'))      data = extractStepStone();
+
+    if (data) {
+      sendResponse({ success: true, data });
+    } else {
+      sendResponse({ success: false, reason: 'not_a_job_page' });
+    }
+    return true;
+  });
+}

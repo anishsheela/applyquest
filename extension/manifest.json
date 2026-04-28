@@ -45,7 +45,7 @@
     }
   ],
 
-  "permissions": ["storage", "activeTab", "tabs"],
+  "permissions": ["storage", "activeTab", "tabs", "scripting"],
 
   "host_permissions": [
     "https://applyquest.anishsheela.com/*"

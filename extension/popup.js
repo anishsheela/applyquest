@@ -110,13 +110,32 @@ $('jobForm').addEventListener('submit', async (e) => {
     if (tab && tab.id) {
       savedJobUrl = tab.url ? tab.url.split('?')[0] : null;
 
-      const result = await browser.tabs.sendMessage(tab.id, { type: 'EXTRACT_JOB' });
+      let result = null;
+      try {
+        result = await browser.tabs.sendMessage(tab.id, { type: 'EXTRACT_JOB' });
+      } catch (_) {
+        // Content script not present — SPA navigation didn't trigger manifest injection.
+        // Inject programmatically now (activeTab + scripting permissions allow this).
+        await browser.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: [
+            'content/linkedin.js',
+            'content/indeed.js',
+            'content/glassdoor.js',
+            'content/xing.js',
+            'content/stepstone.js',
+            'content/extractor.js',
+          ],
+        });
+        result = await browser.tabs.sendMessage(tab.id, { type: 'EXTRACT_JOB' });
+      }
+
       if (result && result.success && result.data) {
         populateForm(result.data);
         if (result.data.jobUrl) savedJobUrl = result.data.jobUrl;
       }
     }
   } catch (_) {
-    // Not on a job page — show the blank form
+    // Not a supported page — user fills in manually
   }
 })();
