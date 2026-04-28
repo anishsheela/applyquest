@@ -27,7 +27,8 @@ app.add_middleware(
         "http://localhost:3000",
         "https://applyquest.anishsheela.com",
     ],
-    allow_credentials=True,
+    allow_origin_regex=r"moz-extension://.*",
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

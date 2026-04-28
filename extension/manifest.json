@@ -1,0 +1,60 @@
+{
+  "manifest_version": 3,
+  "name": "ApplyQuest Clipper",
+  "version": "1.0.0",
+  "description": "Save job listings to ApplyQuest with one click",
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Save to ApplyQuest",
+    "default_icon": "icon.svg"
+  },
+
+  "options_ui": {
+    "page": "settings.html",
+    "open_in_tab": true
+  },
+
+  "background": {
+    "scripts": ["background.js"]
+  },
+
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.linkedin.com/jobs/*",
+        "*://*.indeed.com/viewjob*",
+        "*://*.indeed.com/job/*",
+        "*://*.glassdoor.com/job-listing/*",
+        "*://*.glassdoor.com/partner/jobListing*",
+        "*://*.xing.com/jobs/detail/*",
+        "*://*.stepstone.de/stellenangebote/*",
+        "*://*.stepstone.de/job/*",
+        "*://*.stepstone.com/job/*",
+        "*://*.stepstone.at/stellenangebote/*"
+      ],
+      "js": [
+        "content/linkedin.js",
+        "content/indeed.js",
+        "content/glassdoor.js",
+        "content/xing.js",
+        "content/stepstone.js",
+        "content/extractor.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "permissions": ["storage", "activeTab", "tabs"],
+
+  "host_permissions": [
+    "https://applyquest.anishsheela.com/*"
+  ],
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "applyquest-clipper@anishsheela.com",
+      "strict_min_version": "109.0"
+    }
+  }
+}

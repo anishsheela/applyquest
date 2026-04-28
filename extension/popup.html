@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ApplyQuest Clipper</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="header">
+    <span class="logo">AQ</span>
+    <span class="title">ApplyQuest Clipper</span>
+    <button class="settings-btn" id="settingsBtn" title="Settings">⚙</button>
+  </div>
+
+  <div id="viewUnauthenticated" class="view hidden">
+    <p class="message">Not connected to ApplyQuest.</p>
+    <button class="btn btn-primary" id="goToSettingsBtn">Open Settings</button>
+  </div>
+
+  <div id="viewForm" class="view hidden">
+    <form id="jobForm">
+      <div class="field">
+        <label for="jobTitle">Job Title *</label>
+        <input type="text" id="jobTitle" required placeholder="e.g. Senior Software Engineer" />
+      </div>
+      <div class="field">
+        <label for="companyName">Company *</label>
+        <input type="text" id="companyName" required placeholder="e.g. Acme GmbH" />
+      </div>
+      <div class="field">
+        <label for="location">Location *</label>
+        <input type="text" id="location" required placeholder="e.g. Berlin, Germany" />
+      </div>
+      <div class="field-row">
+        <div class="field field-half">
+          <label for="jobBoardSource">Source</label>
+          <input type="text" id="jobBoardSource" placeholder="LinkedIn" />
+        </div>
+        <div class="field field-half">
+          <label>Priority</label>
+          <div class="stars" id="starsInput">
+            <span class="star" data-value="1">★</span>
+            <span class="star" data-value="2">★</span>
+            <span class="star" data-value="3">★</span>
+            <span class="star" data-value="4">★</span>
+            <span class="star" data-value="5">★</span>
+          </div>
+          <input type="hidden" id="priorityStars" value="0" />
+        </div>
+      </div>
+      <div class="field-row">
+        <label class="checkbox-label">
+          <input type="checkbox" id="easyApply" />
+          Easy Apply
+        </label>
+      </div>
+      <div class="field">
+        <label for="notes">Notes</label>
+        <textarea id="notes" rows="2" placeholder="Optional notes..."></textarea>
+      </div>
+
+      <div id="errorMsg" class="error-msg hidden"></div>
+
+      <button type="submit" class="btn btn-primary btn-full" id="submitBtn">
+        Add to ApplyQuest
+      </button>
+    </form>
+  </div>
+
+  <div id="viewSuccess" class="view hidden">
+    <div class="success-icon">✓</div>
+    <p class="success-msg">Saved to ApplyQuest!</p>
+    <a id="viewLink" href="#" target="_blank" class="link">View in ApplyQuest →</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
