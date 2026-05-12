@@ -24,3 +24,6 @@ scripts/
 
 #Backups
 *.sql
+
+#Firefox extension builds
+/extension/web-ext-artifacts
