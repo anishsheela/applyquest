@@ -139,7 +139,7 @@ def job_followup_digest():
     """9 AM Berlin — send followup digest if there are actionable items (skips off-days)."""
     from datetime import datetime
     from app.db.session import SessionLocal
-    from app.models.application import Application
+    from app.models.application import Application, ApplicationStatus
     from app.core.working_days import load_off_days, _is_off_day
     from app.core.email import notify_followup_digest
     from app.core.followup import needs_followup, needs_decision, FOLLOWUP_STALE_DAYS, DECISION_STALE_DAYS
@@ -154,7 +154,10 @@ def job_followup_digest():
         if user is None:
             return
 
-        applications = db.query(Application).filter(Application.user_id == user.id).all()
+        applications = db.query(Application).filter(
+            Application.user_id == user.id,
+            Application.status != ApplicationStatus.REJECTED,
+        ).all()
 
         followup_apps = [
             {

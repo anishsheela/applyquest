@@ -169,7 +169,8 @@ def notify_weekly_summary(
         {row("Total points", points)}
     </table>
     """
-    _send(_mentor_emails(), f"Weekly update: {user_name}'s job search", html)
+    recipients = [settings.USER_EMAIL] + _mentor_emails()
+    _send(recipients, f"Weekly update: {user_name}'s job search", html)
 
 
 def notify_followup_digest(
